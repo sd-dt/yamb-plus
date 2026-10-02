@@ -1,0 +1,16 @@
+[Unit]
+Description=mcbot controller (QQ -> MC bot bridge, yamb-plus)
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=@MCBOT_HOME@/controller
+EnvironmentFile=@MCBOT_HOME@/.env
+ExecStart=@NODE_BIN@ @MCBOT_HOME@/controller/controller.js
+Restart=always
+RestartSec=10
+StandardOutput=append:@MCBOT_HOME@/data/controller.log
+StandardError=append:@MCBOT_HOME@/data/controller.log
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,19 @@
+{
+  "// 说明": "复制为 config/fleet.json（已被 .gitignore 忽略）后按需修改。所有 QQ 号 / MC 账号 / bot 名都只写在这里，代码里没有。",
+  "accounts": [
+    { "name": "bot1", "num": "1", "port": 15101 },
+    { "name": "bot2", "num": "2", "port": 15102 },
+    { "name": "bot3", "num": "3", "port": 15103 },
+    { "name": "bot4", "num": "4", "port": 15104 }
+  ],
+  "napcat": [
+    { "key": "A", "name": "主号", "uin": "", "container": "napcat", "port": 3000, "qr_script": "monitor/qr.sh napcat" },
+    { "key": "B", "name": "备用号", "uin": "", "container": "napcat-b", "port": 3001, "qr_script": "monitor/qr.sh napcat-b" }
+  ],
+  "admins": [],
+  "owners": [],
+  "spare_self_ids": [],
+  "trusted_groups": [],
+  "notify_user": "",
+  "notify_group": ""
+}

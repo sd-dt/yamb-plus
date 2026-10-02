@@ -1,0 +1,19 @@
+[Unit]
+Description=yamb Minecraft AFK bot (managed by yamb-plus)
+After=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+WorkingDirectory=@YAMB_DIR@
+Environment="NODE_OPTIONS=--require=@YAMB_DIR@/rp-fix.js --require=@YAMB_DIR@/keepalive.js"
+ExecStart=@NODE_BIN@ dist/index.js --headless
+Restart=always
+RestartSec=15
+MemoryMax=700M
+StandardOutput=append:@YAMB_DIR@/yamb.log
+StandardError=append:@YAMB_DIR@/yamb.log
+
+[Install]
+WantedBy=default.target

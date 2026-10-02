@@ -1,0 +1,57 @@
+# NapCat（QQ 协议端）+ AstrBot —— compose 模板
+# 用法：deploy/install.sh 会把它复制到 deploy/compose/docker-compose.yml，
+#       并把仓库根目录的 .env 软链进去（compose 自动读取同目录 .env）。
+# QQ 账号等敏感值全部来自 .env，缺了会直接报错提示，不会用默认值带出真实账号。
+
+services:
+  napcat:
+    image: mlikiowa/napcat-docker:latest
+    container_name: napcat
+    restart: always
+    shm_size: 1gb
+    environment:
+      - NAPCAT_UID=${NAPCAT_UID}
+      - NAPCAT_GID=${NAPCAT_GID}
+      - ACCOUNT=${NAPCAT_A_ACCOUNT:?请在 .env 设置 NAPCAT_A_ACCOUNT}
+    ports:
+      - "127.0.0.1:6099:6099"
+      - "127.0.0.1:${NAPCAT_PRIMARY_PORT:-3000}:3000"
+    volumes:
+      - ./config:/app/napcat/config
+      - ./qq:/app/.config/QQ
+      - ./logs:/app/napcat/logs
+      - ./plugins:/app/napcat/plugins
+
+  astrbot:
+    image: soulter/astrbot:latest
+    container_name: astrbot
+    restart: always
+    environment:
+      - TZ=Asia/Shanghai
+      # 传入 mcbot 插件需要的控制器地址与舰队配置（插件内部读取）
+      - CTRL_PORT=${CTRL_PORT:-15100}
+      - CTRL_KEY=${CTRL_KEY:?请在 .env 设置 CTRL_KEY}
+      - FLEET_FILE=/opt/mcbot-config/fleet.json
+    ports:
+      - "6185:6185"
+    volumes:
+      - ${ASTRBOT_DATA_DIR:?请在 .env 设置 ASTRBOT_DATA_DIR（宿主机 AstrBot data 绝对路径）}:/AstrBot/data
+      - ${FLEET_FILE_HOST_DIR:?请在 .env 设置 FLEET_FILE_HOST_DIR（fleet.json 所在的宿主机目录）}:/opt/mcbot-config:ro
+
+  napcat-b:
+    image: mlikiowa/napcat-docker:latest
+    container_name: napcat-b
+    restart: always
+    shm_size: 512m
+    environment:
+      - NAPCAT_UID=${NAPCAT_UID}
+      - NAPCAT_GID=${NAPCAT_GID}
+      - ACCOUNT=${NAPCAT_B_ACCOUNT:?请在 .env 设置 NAPCAT_B_ACCOUNT}
+    ports:
+      - "127.0.0.1:6100:6099"
+      - "127.0.0.1:${NAPCAT_SPARE_PORT:-3001}:3000"
+    volumes:
+      - ./napcat-b/config:/app/napcat/config
+      - ./napcat-b/qq:/app/.config/QQ
+      - ./napcat-b/logs:/app/napcat/logs
+      - ./napcat-b/plugins:/app/napcat/plugins

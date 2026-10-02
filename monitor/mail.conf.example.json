@@ -1,0 +1,11 @@
+{
+  "// 说明": "复制为 monitor/mail.conf.json（权限 600，已被 .gitignore 忽略）；或直接运行 monitor/mail-setup.sh 交互生成",
+  "enabled": false,
+  "host": "smtp.example.com",
+  "port": 465,
+  "secure": true,
+  "user": "you@example.com",
+  "pass": "SMTP-AUTH-CODE",
+  "from": "you@example.com",
+  "to": "you@example.com"
+}
