@@ -1,0 +1,5 @@
+name: astrbot_plugin_mcbot
+display_name: MC 挂机机器人控制
+desc: 通过 QQ 管理员私聊控制 MC 挂机机器人（yamb）：上线/下线/切换账号/执行游戏内指令，以及 AI 聊天总开关
+version: v1.0.0
+author: your-name

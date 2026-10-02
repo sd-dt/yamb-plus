@@ -1,0 +1,7 @@
+[Unit]
+Description=yamb keep-alive (确保启用的号在线；明确停止时不动)
+
+[Service]
+Type=oneshot
+ExecStart=@MCBOT_HOME@/controller/switch.sh ensure --quiet
+EnvironmentFile=@MCBOT_HOME@/.env

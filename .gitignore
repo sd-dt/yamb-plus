@@ -1,0 +1,24 @@
+# ---- 密钥与账号（绝不入库）----
+.env
+config/fleet.json
+config/credentials.yaml
+config/forbidden.txt
+deploy/compose/
+monitor/mail.conf.json
+
+# ---- yamb 本体（来自上游 fork，单独管理）----
+/yamb/
+
+# ---- 运行时数据 / 日志 ----
+data/*
+!data/.gitkeep
+*.log
+*.pid
+
+# ---- 杂项 ----
+node_modules/
+__pycache__/
+*.pyc
+*.bak*
+*.tmp
+.DS_Store

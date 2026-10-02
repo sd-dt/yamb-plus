@@ -1,0 +1,11 @@
+# 泄密扫描（scripts/check-secrets.sh）的字面禁串清单
+# 复制本文件为 config/forbidden.txt（已被 .gitignore 忽略，绝不入库！），
+# 每行一个你自己的敏感串：QQ 号 / 群号 / MC 账号 / 服务器域名 / API key / SMTP 授权码 / bot 名。
+# 填好后，扫描会把这些字符串当作"出现在仓库任何文件里都算泄密"。
+
+my-qq-number
+my-group-number
+my-account-name
+mc.my-server.example.com
+my-secret-api-key
+my-bot-name
