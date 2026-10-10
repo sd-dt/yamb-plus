@@ -9,18 +9,31 @@
 ## QQ 指令（挂在 mcbot 插件/控制器上，仅主人可用）
 | 指令 | 说明 |
 | --- | --- |
-| `!mcbot addpay <账号> <微软密码>` | 登记转钱小号：生成 `config/bots/<账号>.yaml`（enabled:false，端口自动从 15105 起分配）并登记进 pay.json |
+| `!mcbot addpay <账号>` | 登记转钱小号：生成 `config/bots/<账号>.yaml`（enabled:false，password 恒为空，端口自动从 15105 起分配），并当场发微软官方网址 + 一次性设备授权码 |
 | `!mcbot delpay <账号>` | 从名单移除（yaml 保留但停用） |
 | `!mcbot paylist` | 查看收款人/金额/小号名单/今日尝试情况 |
 | `!mcbot paytest [账号]` | 立刻跑一次完整流程 |
+| `!mcbot payauth <账号>` | 重新发设备授权码（token 失效/登录失败时用） |
 | `!mcbot payset <收款人> <金额>` | 设置收款人与金额（全号统一，写进 pay.json） |
+
+## 授权方式（_p70 设备码流，免密码）
+- `addpay`/`payauth` 会拉起 `scripts/ms-device-auth.js`（与 yamb 登录完全同构：同 token 缓存目录 `MC_PROFILES_FOLDER`、同 `flow: live`、同 authTitle），用 prismarine-auth 走微软官方设备码流程。
+- QQ 里只出现 `https://www.microsoft.com/link` 和一次性授权码（15 分钟有效）；**微软密码全程不经过聊天记录、不落任何配置文件**。
+- 浏览器完成授权后 token 写进本地缓存（`<sha1(账号)前6>_live-cache.json` 等），yamb 登录时直接复用缓存，不再要密码。
+- 授权脚本完成/失败都会私聊通知；授权状态文件在 `/opt/qqbot/mcbot/pay-auth/`（700/600，只含网址和授权码，不含 token）。
+
+## 安全强化清单
+- 微软密码不再出现在 QQ/配置/日志（设备码授权替代）。
+- token 缓存目录 `chmod 700`；授权状态目录/文件 700/600。
+- `pay.json` 666（容器 payset 与宿主双向写，但不含任何凭据）。
+- systemd 单元含密钥的 `mc-pay.service` 为 600；`ms-device-auth.js` 的密钥全走环境变量。
 
 ## 配置文件
 - `pay.json`：收款人 / 金额 / 指令模板（默认 `/pay {to} {amount}`，可用 `{to}` `{amount}` 占位）/ 通知 QQ / 小号名单 / 端口映射。样例见 `config/pay.example.json`。
 - `pay-state.json`：当日尝试计数与成功名单（每天自动重置），同目录自动生成 `pay.lock` 防并发。
 
 ## 部署
-1. 把 `scripts/pay-daily.js` 放到服务器（本仓库默认部署在 `/opt/qqbot/mcbot/pay-daily.js`）。
+1. 把 `scripts/pay-daily.js`（转钱执行器）与 `scripts/ms-device-auth.js`（设备码授权器）放到服务器（本仓库默认部署在 `/opt/qqbot/mcbot/pay-daily.js`）。
 2. 用 `deploy/mc-pay.service.template` 生成 systemd service（替换 `__NODE__` / 密钥等占位符，**建议 chmod 600**），`deploy/mc-pay.timer` 的触发时间是每天 04:00。
 3. 必填环境变量：`PAY_CTRL_KEY`（控制器 API key）、`PAY_YAMB_KEY`（yamb 控制口 key）、`PAY_NAPCAT_TOKEN`（NapCat HTTP token，不填则只打日志不私聊）。
 4. `sudo systemctl daemon-reload && sudo systemctl enable --now mc-pay.timer`。

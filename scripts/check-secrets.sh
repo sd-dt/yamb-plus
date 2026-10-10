@@ -38,6 +38,8 @@ for p in "$PATTERN_NUM" "$PATTERN_MAIL" "$PATTERN_DOMAIN"; do
     # 白名单：示例域名 / QQ 官方登录链接 / 端口号 / 版本号 / 文档里的占位
     case "$l" in
       *example.com*|*example.org*|*txz.qq.com*|*smtp.qq.com*|*mlikiowa*|*soulter*) continue ;;
+      # _p70: 微软官方公开域（设备码授权网址），非敏感
+      *microsoft.com*|*microsoft.com/link*|*login.live.com*) continue ;;
       *nanoite*|*github.com*|*yamb-plus*|*workbuddy*) continue ;;
     esac
     case "$l" in
