@@ -1,0 +1,10 @@
+[Unit]
+Description=Run mc-pay daily at 04:00
+
+[Timer]
+OnCalendar=*-*-* 04:00:00
+Persistent=true
+Unit=mc-pay.service
+
+[Install]
+WantedBy=timers.target

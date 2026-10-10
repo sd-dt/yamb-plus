@@ -1,0 +1,8 @@
+{
+  "pay_to": "",
+  "pay_amount": "",
+  "command": "/pay {to} {amount}",
+  "notify_user": "0",
+  "accounts": [],
+  "ports": {}
+}

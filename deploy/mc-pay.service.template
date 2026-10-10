@@ -1,0 +1,17 @@
+[Unit]
+Description=MC daily auto-login & pay (04:00, up to 4 tries per account)
+After=network-online.target mc-daily-login.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=__USER__
+# 密钥全部走环境变量，不要写进代码
+Environment=PAY_CTRL_KEY=__CTRL_KEY__
+Environment=PAY_YAMB_KEY=__YAMB_KEY__
+Environment=PAY_NAPCAT_TOKEN=__NAPCAT_TOKEN__
+# 可选：PAY_DIR / PAY_BOTS_DIR / PAY_CTRL_PORT / PAY_YAMB_PORT / PAY_NAPCAT_PORT / PAY_MAX_TRIES
+ExecStart=__NODE__ __REPO_OR_MCBOT_DIR__/pay-daily.js
+TimeoutStartSec=10800
+StandardOutput=append:__LOG_DIR__/pay.log
+StandardError=append:__LOG_DIR__/pay.log
