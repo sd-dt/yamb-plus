@@ -122,6 +122,10 @@ def main():
     commit_payload = {"message": args.message, "tree": tree["sha"]}
     if head:
         commit_payload["parents"] = [head["commit"]["sha"]]
+    # 显式指定 author/committer：防止 GitHub 用账号主邮箱自动填充（隐私泄露）
+    IDENTITY = {"name": "yamb-plus", "email": "yamb-plus@users.noreply.github.com"}
+    commit_payload["author"] = dict(IDENTITY)
+    commit_payload["committer"] = dict(IDENTITY)
     commit = api("POST", "/repos/%s/git/commits" % args.repo, token, commit_payload)
 
     if head:
