@@ -83,7 +83,7 @@ const yambStatus = (port) => req(port, 'GET', '/api/status', { 'x-api-key': YAMB
 function yambAlive () {
   try {
     const { execSync } = require('child_process')
-    const out = execSync("pgrep -f 'yamb/dist/index.js' | head -1",
+    const out = execSync("pgrep -f 'yamb/dist/index[.]js' | head -1",
       { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
     return out !== ''
   } catch (e) { return false }
@@ -109,15 +109,27 @@ async function startInstance (acc) {
         timeout: 90000
       })
       log('yamb 未在运行 -> 已随小号 ' + acc + ' 启动')
-      return
+      // _p73b: systemctl(Type=simple) 立即返回，但 yamb 启动需数秒、控制口 15199 可能还没监听
+      // -> 不再直接 return，落到下面的控制口调用（若 yamb 已自动带上小号，会回"已在运行"）
     } catch (e) {
       log('⚠️ 直接拉起 yamb 失败，转控制口热启动: ' + e.message)
     }
   }
+  // _p73b: 控制口可能尚未就绪（yamb 刚被拉起），ECONNREFUSED 时重试等待
+  const waitCtrlMs = parseInt(process.env.PAY_CTRL_WAIT_MS || String(30 * 1000), 10)
+  const deadline = Date.now() + waitCtrlMs
+  let warned = false
   let r = null
-  try { r = await yambCtrl('POST', '/api/instances/start', { account: acc }) } catch (e) {
-    setYamlEnabled(acc, false)
-    throw new Error('yamb 上线请求失败：' + e.message)
+  for (;;) {
+    try { r = await yambCtrl('POST', '/api/instances/start', { account: acc }); break } catch (e) {
+      const refused = String(e.message).indexOf('ECONNREFUSED') >= 0
+      if (!refused || Date.now() >= deadline) {
+        setYamlEnabled(acc, false)
+        throw new Error('yamb 上线请求失败：' + e.message)
+      }
+      if (!warned) { log('yamb 控制口尚未就绪，等待中（最多 ' + Math.round(waitCtrlMs / 1000) + 's）…'); warned = true }
+      await sleep(1000)
+    }
   }
   const s = JSON.stringify(r || {})
   if ((r && r.ok) || s.indexOf('已在运行') >= 0) return
@@ -203,10 +215,15 @@ function saveState (st) {
 
 async function run (only) {
   const cfg = readJson(PAY_FILE, {})
-  let accounts = Array.isArray(cfg.accounts) ? cfg.accounts.filter((a) => a && !/\s|[\/\\]/.test(a)) : []
-  if (only) accounts = accounts.indexOf(only) >= 0 ? [only] : []
+  const all = Array.isArray(cfg.accounts) ? cfg.accounts.filter((a) => a && !/\s|[\/\\]/.test(a)) : []
+  // _p73: 单号开关（paySwitch[a] !== false 缺省=开）；paytest 手动点名不受开关限制
+  const paySwitch = cfg.paySwitch || {}
+  const active = all.filter((a) => paySwitch[a] !== false)
+  let accounts = only ? (all.indexOf(only) >= 0 ? [only] : []) : active
   if (!accounts.length) {
-    log(only ? ('没有叫 ' + only + ' 的转钱小号，退出') : '没有登记转钱小号，退出（用 !mcbot addpay <账号> <微软密码> 登记）')
+    log(only ? ('没有叫 ' + only + ' 的转钱小号，退出')
+      : (all.length ? '小号全部处于暂停状态，退出（用 !mcbot payon <账号> 恢复）'
+        : '没有登记转钱小号，退出（用 !mcbot addpay <账号> 登记）'))
     return
   }
   if (!cfg.pay_to || !cfg.pay_amount) {
