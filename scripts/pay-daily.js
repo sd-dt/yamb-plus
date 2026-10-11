@@ -33,6 +33,8 @@ const INGAME_TIMEOUT_MS = parseInt(process.env.PAY_INGAME_TIMEOUT_MS || String(1
 const POLL_MS = 15 * 1000
 const RETRY_WAIT_MS = parseInt(process.env.PAY_RETRY_WAIT_MS || String(60 * 1000), 10)
 const STALE_LOCK_MS = 3 * 60 * 60 * 1000
+// _p76: 仅每日登录账号（mc-daily-login）的转账日志，用于并入转钱日报
+const DAILY_LOG = process.env.PAY_DAILY_LOG || '/opt/qqbot/mc/last-run.log'
 
 if (!CTRL_KEY || !YAMB_KEY) {
   console.error('[pay] 缺少 PAY_CTRL_KEY / PAY_YAMB_KEY 环境变量，退出')
@@ -197,6 +199,24 @@ async function payOne (acc, cfg) {
   return { ok: true, note: cmd, replies }
 }
 
+/* ── _p76: 解析 mc-daily-login 的 last-run.log，取"仅每日登录账号"的转账与余额告警 ── */
+function readDailyPays () {
+  let txt = ''
+  try { txt = fs.readFileSync(DAILY_LOG, 'utf8') } catch (e) { return { pays: {}, warns: [] } }
+  const pays = {}
+  const warns = []
+  const seen = {}
+  for (const raw of txt.split('\n')) {
+    let m = raw.match(/【([^】]+)】【聊天】.*你已支付\s+(\S+)\s+([\d.]+)/)
+    if (m) pays[m[1]] = '已转 ' + m[3] + ' 给 ' + m[2]
+    if (/余额(过低|不足)/.test(raw)) {
+      m = raw.match(/【([^】]+)】【聊天】(.*)$/)
+      if (m && !seen[m[1]]) { seen[m[1]] = true; warns.push(m[1] + '：' + m[2].trim()) }
+    }
+  }
+  return { pays: pays, warns: warns }
+}
+
 async function napcatSend (text) {
   const cfg = readJson(PAY_FILE, {})
   const user = parseInt(String(cfg.notify_user || ''), 10)
@@ -290,6 +310,19 @@ async function run (only) {
   }
 
   const mins = Math.round((Date.now() - started) / 60000)
+  // _p76: 并入"仅每日登录账号"（daily-login）的转账消息（paytest 单号模式不加）
+  if (!only) {
+    const dp = readDailyPays()
+    const names = Object.keys(dp.pays)
+    if (names.length) {
+      report.push('━━ 每日登录号转账 ━━')
+      for (const k of names) report.push('✅ ' + k + '：' + dp.pays[k])
+      if (dp.warns.length) {
+        report.push('⚠️ 余额告警：')
+        for (const w of dp.warns) report.push('   ' + w)
+      }
+    }
+  }
   const msg = ['💰 转钱日报（' + today + '，用时 ' + mins + ' 分钟）'].concat(report).join('\n')
   log(msg)
   await napcatSend(msg)

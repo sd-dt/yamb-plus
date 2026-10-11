@@ -5,6 +5,7 @@
 - 登录失败自动排到队尾重试，**每个小号每天最多尝试 4 次**（可用 `PAY_MAX_TRIES` 调整）。
 - 转钱期间临时下线其他挂机号（避免占满 MAX_ONLINE、保证指令走小号），结束后自动恢复。
 - 执行结果私聊通知（NapCat HTTP）。
+- 转钱日报会并入「每日登录号」（mc-daily-login）的转账与余额告警（解析 `/opt/qqbot/mc/last-run.log`，路径可用 `PAY_DAILY_LOG` 覆盖；`paytest` 单号模式不含这一节）。
 - 支持单号开关：`payon/payoff` 控制每个小号是否参与每日自动转钱（`pay.json` 的 `paySwitch` 键，缺省=开；`paytest` 手动点名不受开关限制）。
 
 ## QQ 指令（挂在 mcbot 插件/控制器上，仅主人可用）
