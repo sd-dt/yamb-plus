@@ -1,0 +1,5 @@
+name: astrbot_plugin_litematic
+display_name: Litematic 投影渲染
+desc: 群里发 .litematic 投影文件，自动渲染成二轴测预览图并发送（纯 Python + Pillow，无需 Java/GPU）
+version: v1.0.0
+author: yamb-plus

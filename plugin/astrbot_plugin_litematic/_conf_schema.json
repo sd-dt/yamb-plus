@@ -1,0 +1,27 @@
+{
+  "enabled_groups": {
+    "type": "list",
+    "description": "启用渲染的群号列表（留空 = 所有群都生效）",
+    "default": []
+  },
+  "max_file_mb": {
+    "type": "int",
+    "description": "单个投影文件大小上限（MB）",
+    "default": 30
+  },
+  "max_blocks": {
+    "type": "int",
+    "description": "最多解码的方块数，超过会抽稀（防内存爆掉，容器只有 1G）",
+    "default": 300000
+  },
+  "image_max_px": {
+    "type": "int",
+    "description": "输出图片最长边像素",
+    "default": 1400
+  },
+  "cooldown_seconds": {
+    "type": "int",
+    "description": "同群两次渲染的最小间隔（秒）",
+    "default": 5
+  }
+}
