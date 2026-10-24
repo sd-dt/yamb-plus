@@ -33,6 +33,22 @@ DEFAULTS = {
 CACHE_KEEP_SECONDS = 3600
 
 
+def _in_temp_dir(p):
+    """判断路径是否在临时目录里（只有临时的下载副本才可以直接删）"""
+    try:
+        ap = os.path.abspath(p)
+    except Exception:
+        return False
+    try:
+        from astrbot.core.utils.astrbot_path import get_astrbot_temp_path
+        base = os.path.abspath(str(get_astrbot_temp_path()))
+        if base and os.path.commonpath([ap, base]) == base:
+            return True
+    except Exception:
+        pass
+    return any(seg in ('tmp', 'temp') for seg in ap.replace('\\', '/').split('/')[:-1])
+
+
 @register(PLUGIN_NAME, 'yamb-plus', '把 .litematic 投影渲染成预览图', 'v1.0.0')
 class LitematicRenderer(Star):
     def __init__(self, context: Context, config=None):
@@ -188,7 +204,7 @@ class LitematicRenderer(Star):
             self._purge_cache()
         finally:
             try:
-                if src and os.path.exists(src) and '/tmp' in src:
+                if src and os.path.exists(src) and _in_temp_dir(src):
                     os.remove(src)
             except Exception:
                 pass
