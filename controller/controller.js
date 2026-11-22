@@ -41,7 +41,7 @@ const { execFileSync, execFile, spawn } = require('child_process')
 const { captureReply, logSizeNow, captureOutgoing, outSizeNow } = require('./reply-capture')
 
 const PORT = 15100
-const API_KEY = process.env.MCBOT_CTRL_KEY || 'change-me'
+const API_KEY = process.env.MCBOT_CTRL_KEY || process.env.CTRL_KEY || 'change-me'
 const YAMB = '/opt/qqbot/yamb'
 const BOTS = path.join(YAMB, 'config', 'bots')
 const SWITCH = '/opt/qqbot/mcbot/switch.sh'

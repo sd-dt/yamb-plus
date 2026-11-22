@@ -54,7 +54,7 @@ DEFAULT_ADMINS = [x.strip() for x in os.environ.get("MCBOT_ADMINS", "").split(",
 # 备用号：除 !mcbot / !qqbot 外一律静默，避免群里两个机器人同时说话
 SPARE_IDS = set()  # _p68: 双号已取消，只保留主号
 CONTROLLER_PORT = 15100
-CONTROLLER_KEY = os.environ.get("MCBOT_CONTROLLER_KEY", "change-me")
+CONTROLLER_KEY = os.environ.get("MCBOT_CONTROLLER_KEY") or os.environ.get("CTRL_KEY") or "change-me"
 
 ACCOUNTS = ["sd_dt", "___Fr0g___", "___donk666___", "Nekoade_MAP"]
 
