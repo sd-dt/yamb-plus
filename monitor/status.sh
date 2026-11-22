@@ -1,14 +1,11 @@
 #!/bin/bash
-# 一键体检 —— 用法: bash monitor/status.sh
-# 所有密钥/端口/容器名来自 .env 与 config/fleet.json（见 lib/env.sh）
-. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/env.sh"
-TOKEN=${NAPCAT_TOKEN:?缺少 NAPCAT_TOKEN（复制 .env.example 为 .env 并填写）}
-CTRL_KEY=${CTRL_KEY:?缺少 CTRL_KEY}
-CTRL_PORT=${CTRL_PORT:-15100}
+# QQBot 一键体检 v3（双号版 + yamb 详情）—— 用法: bash /opt/qqbot/status.sh
+TOKEN=${ONEBOT_TOKEN:-change-me}
+CTRL_KEY=${MCBOT_CTRL_KEY:-change-me}
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-cd "$NAPCAT_COMPOSE_DIR" || exit 1
+cd /opt/qqbot || exit 1
 
-probe () {  # $1=端口  $2=名字  $3=取码命令
+probe () {  # $1=端口  $2=名字  $3=取码脚本
   local R
   R=$(curl -s -m 8 -H "Authorization: Bearer $TOKEN" "http://127.0.0.1:$1/get_login_info")
   echo -n ">>> $2："
@@ -21,57 +18,44 @@ probe () {  # $1=端口  $2=名字  $3=取码命令
   fi
 }
 
-# 从 fleet.json 组装探测行：port|key 名称|取码命令
-NAP_ROWS=$(fleet_json "f.napcat.map(n=>[n.port,(n.key||'?')+' '+(n.name||''),n.qr_script||('monitor/qr.sh '+(n.container||''))].join('|')).join(';')")
-NAP_CONTAINERS=$(fleet_json "f.napcat.map(n=>n.container).join(' ')")
-
-echo "=========== QQBot 体检 $(date '+%F %T') ==========="
+echo "=========== QQBot 体检 $(date '+%F %T') 双号版 ==========="
 echo ""
 echo "--- 1. 容器状态 ---"
-docker compose ps
+docker ps --format 'table {{.Names}}\t{{.Status}}' | grep -Ei 'NAMES|snowluma|astrbot|yamb'
 echo ""
 echo "--- 2. QQ 在线状态 ---"
-IFS=';' read -ra _ROWS <<< "${NAP_ROWS:-}"
-for _r in "${_ROWS[@]}"; do
-  IFS='|' read -r _port _name _qr <<< "$_r"
-  case "$_qr" in /*) _qrcmd="bash $_qr" ;; *) _qrcmd="bash $_MCBOT_ROOT/$_qr" ;; esac
-  probe "$_port" "$_name" "$_qrcmd"
-done
+probe 3000 "A 地图bot2.0     " /opt/qqbot/qr_snowluma.sh
+# _p68: probe 3001 "B 地图bot2备用线路" /opt/qqbot/qr-b.sh   # 双号已取消
 echo ""
 echo "--- 3. 热备仲裁（控制器 /primary）---"
-P=$(curl -s -m 8 -H "x-api-key: $CTRL_KEY" "http://127.0.0.1:$CTRL_PORT/primary")
-case "$P" in *'"ok"'*) ;; *) P=$(curl -s -m 8 -H "Authorization: Bearer $CTRL_KEY" "http://127.0.0.1:$CTRL_PORT/primary") ;; esac
+P=$(curl -s -m 8 -H "x-api-key: $CTRL_KEY" http://127.0.0.1:15100/primary)
+case "$P" in *'"ok"'*) ;; *) P=$(curl -s -m 8 -H "Authorization: Bearer $CTRL_KEY" http://127.0.0.1:15100/primary) ;; esac
 echo "$P"
 echo "    （online:true 表示主号可用，备用号会自动闭嘴，避免双回复/双倍 token）"
-echo -n "    备用号发送自检："
-node -e "try{const s=require('$STATE_FILE');console.log(s.spareSendOk===undefined?'未做过':(s.spareSendOk?'正常 '+(s.spareSendAt||''):'异常! '+(s.spareSendNote||'')))}catch(e){console.log('读取失败')}"
+echo -n "    备用号发送自检："; node -e "try{const s=require('/opt/qqbot/state.json');console.log(s.spareSendOk===undefined?'未做过':(s.spareSendOk?'正常 '+(s.spareSendAt||''):'异常! '+(s.spareSendNote||'')))}catch(e){console.log('读取失败')}"
 echo ""
 echo "--- 4. 最近掉线原因（关键）---"
-for c in $NAP_CONTAINERS; do
+for c in snowluma; do
   echo "  [$c]"
   docker logs --tail=400 "$c" 2>&1 | grep -iE "KickedOffLine|账号状态变更为离线|快速登录错误|Login Error|二维码已被扫描" | tail -3
 done
 echo ""
 echo "--- 5. 监控最近记录 ---"
-tail -6 "$MONITOR_LOG" 2>/dev/null
+tail -6 /opt/qqbot/monitor.log 2>/dev/null
 echo ""
 echo "--- 6. 定时器 ---"
-systemctl list-timers $MCBOT_TIMERS --no-pager 2>/dev/null | head -7
+systemctl list-timers mc-daily-login.timer qqbot-monitor.timer qqbot-backup.timer qqbot-heartbeat.timer --no-pager 2>/dev/null | head -7
 echo ""
 echo "--- 7. 内存 ---"
 free -h | head -2
 echo ""
 echo "--- 8. AstrBot 连接状态 ---"
-docker compose logs --tail=800 astrbot 2>/dev/null | grep -iE "适配器已连接|适配器已被关闭" | tail -4
-_i=0
-for c in $NAP_CONTAINERS; do
-  _i=$((_i + 1))
-  echo -n "  WS 连接数（应为 1）[#$_i $c]："
-  docker exec "$c" sh -c 'cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | grep -c ":1837"' 2>/dev/null
-done
+docker logs --tail=800 astrbot 2>/dev/null | grep -iE "适配器已连接|适配器已被关闭" | tail -4
+echo -n "  OneBot WS-Client 连接次数（应有记录）："
+docker logs snowluma 2>&1 | grep -c '\[astrbot\] connected'
 echo ""
 echo "--- 9. 最近的 MC 任务 / 日报 ---"
-tail -6 "${MC_LOG_FILE%/*}/daily.log" 2>/dev/null
+tail -6 /opt/qqbot/mc/daily.log 2>/dev/null
 echo ""
 echo "--- 10. yamb（MC 挂机）---"
 ACT=$(systemctl --user is-active yamb.service 2>/dev/null)
@@ -88,19 +72,21 @@ case "$(systemctl --user show yamb.service -p Result --value 2>/dev/null)" in
   success)   echo "    >>> 判读：正常退出（多半是主动 stop，或 !mcbot stop / !mcbot <账号名> 触发）" ;;
   exit-code) echo "    >>> 判读：程序自己崩了，看 yamb.log 死前几行" ;;
   signal)    echo "    >>> 判读：被信号杀掉（可能是内存超限），查 MemoryMax 与 dmesg" ;;
-  oom-kill)  echo "    >>> 判读：被 cgroup 内存上限杀掉，放宽 unit 的 MemoryMax" ;;
+  oom-kill)  echo "    >>> 判读：被 cgroup 内存上限杀掉，放宽 memlimit.conf 里的 MemoryMax" ;;
   *)         echo "    >>> 判读：（无记录，可能从未启动过）" ;;
 esac
 echo -n "    启用的账号："
 FOUND=0
-for f in "$YAMB_DIR"/config/bots/*.yaml; do
+for f in /opt/qqbot/yamb/config/bots/*.yaml; do
   [ -f "$f" ] || continue
   if grep -Eq "^enabled:[[:space:]]*true" "$f"; then basename "$f" .yaml | tr '\n' ' '; FOUND=1; fi
 done
 [ "$FOUND" = "0" ] && echo -n "（没有账号被启用）"
 echo ""
+echo "    内存保险丝："
+sed 's/^/      /' "$HOME/.config/systemd/user/yamb.service.d/memlimit.conf" 2>/dev/null || echo "      （无 drop-in）"
 echo "    日志尾部："
-tail -5 "$YAMB_DIR/yamb.log" 2>/dev/null | sed 's/^/      /'
-echo "    启停命令：systemctl --user start|stop|restart yamb   （日志 tail -f $YAMB_DIR/yamb.log）"
+tail -5 /opt/qqbot/yamb/yamb.log 2>/dev/null | sed 's/^/      /'
+echo "    启停命令：systemctl --user start|stop|restart yamb   （日志 tail -f /opt/qqbot/yamb/yamb.log）"
 echo ""
 echo "=========== 体检结束 ==========="

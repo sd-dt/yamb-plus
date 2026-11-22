@@ -7,7 +7,7 @@
 yamb-plus 是一套「**用 QQ 管理你的 MC 挂机机器人**」的自托管全家桶，在上游 yamb 之上补齐了三块能力：
 
 1. **QQ 控制层**：AstrBot 插件 + HTTP 控制器，管理员私聊 `!mcbot ...` 即可上/下号、连点、发游戏指令；
-2. **双号热备**：两个 NapCat QQ 互为备份，主号掉线备用号自动接管，全掉线时发邮件告警 + 二维码自救；
+2. **QQ 接入与监控**：SnowLuma（OneBot v11）承担 QQ 登录，反向 WS 接入 AstrBot；掉线自动告警、邮件带二维码自救、可自动重启容器；
 3. **账号运维**：多账号热上/下号（不打扰在线账号）、掉线保活、一键体检、每小时时报。
 
 所有敏感信息（QQ 号、MC 账号、bot 名、服务器地址、密钥）**一律不进代码**，只放在
@@ -16,27 +16,28 @@ yamb-plus 是一套「**用 QQ 管理你的 MC 挂机机器人**」的自托管�
 ## 架构
 
 ```
-手机 QQ ──► NapCat A（主号）──┐
-手机 QQ ──► NapCat B（备用）──┤  反向 WS
-                             ▼
-                        AstrBot 容器
-                        └─ astrbot_plugin_mcbot   （管理员私聊指令解析）
-                             │  HTTP (CTRL_PORT, CTRL_KEY)
-                             ▼
-                   controller/controller.js   ← lib/env.js + lib/fleet.js
-                    ├─ /switch ──► controller/switch.sh ──► yamb 控制口 :15199（热上/下号）
-                    ├─ /action ──► controller/actions.js ──► yamb HTTP API（连点/动作）
-                    ├─ /connect ──► controller/connect.js   （进服提示/回执抓取）
-                    └─ /restart-astrbot（写完白名单后延迟重启）
-                             ▼
-                yamb（上游 fork，多实例，每账号一个 chat 端口）
-                             ▼
-                       Minecraft 服务器
+手机 QQ ──► SnowLuma（OneBot v11，容器 snowluma）──┐
+                                                  │ 反向 WS
+                                                  ▼
+                                             AstrBot 容器
+                                             └─ astrbot_plugin_mcbot   （管理员私聊指令解析）
+                                                  │  HTTP (CTRL_PORT, CTRL_KEY)
+                                                  ▼
+                                        controller/controller.js   ← lib/env.js + lib/fleet.js
+                                         ├─ /switch ──► controller/switch.sh ──► yamb 控制口 :15199（热上/下号）
+                                         ├─ /action ──► controller/actions.js ──► yamb HTTP API（连点/动作）
+                                         ├─ /connect ──► controller/connect.js   （进服提示/回执抓取）
+                                         └─ /restart-astrbot（写完白名单后延迟重启）
+                                                  ▼
+                                     yamb（上游 fork，多实例，每账号一个 chat 端口）
+                                                  ▼
+                                            Minecraft 服务器
 
 monitor/heartbeat.js   每小时时报（QQ 私聊/群）
-monitor/monitor.js     掉线监控：仅全掉线才告警，邮件带二维码，自动重启不可达容器
+monitor/monitor.js     掉线监控：掉线告警，邮件带二维码，自动重启不可达容器
 monitor/report.js      MC 日报
 monitor/status.sh      一键体检
+monitor/qr_snowluma.sh SnowLuma 登录二维码截屏
 ```
 
 ## 快速开始

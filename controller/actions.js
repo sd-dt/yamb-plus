@@ -16,8 +16,8 @@
 
 const http = require('http')
 
-const PORTS = require('../lib/fleet').PORTS
-const YAMB_KEY = require('../lib/env').env.require('YAMB_API_KEY')
+const PORTS = { sd_dt: 15101, '___Fr0g___': 15102, '___donk666___': 15103, Nekoade_MAP: 15104 }
+const YAMB_KEY = process.env.YAMB_API_KEY || 'change-me'
 const TICK_MS = 50
 const MAX_LOOPS = 2
 const MIN_INTERVAL_TICKS = 2
@@ -26,7 +26,7 @@ const MIN_INTERVAL_TICKS = 2
 const ACTS = [
   'attack', 'use', 'attackentity', 'useentity',
   'dig', 'useblock', 'jump', 'sneak', 'sprint',
-  'move', 'look', 'pos', 'drop', 'stop'
+  'move', 'look', 'pos', 'drop', 'dropall', 'stop', 'slot'
 ]
 
 const loops = new Map() // account -> { name, timer, autoStop }
@@ -60,7 +60,8 @@ function yambAction (account, payload, timeoutMs) {
 function clearLoop (account, log) {
   const cur = loops.get(account)
   if (!cur) return false
-  clearInterval(cur.timer)
+  if (cur.timer && typeof cur.timer.stop === 'function') cur.timer.stop()
+  else if (cur.timer) clearInterval(cur.timer)
   if (cur.autoStop) clearTimeout(cur.autoStop)
   loops.delete(account)
   if (log) log('已停止连点：' + account + '（' + cur.name + '）')
@@ -78,7 +79,7 @@ function normalize (body) {
   const act = String(body.act || '').trim().toLowerCase()
   const out = { account: account, act: act }
   for (const k of ['target', 'dir']) if (body[k] !== undefined) out[k] = String(body[k])
-  for (const k of ['x', 'y', 'z', 'yaw', 'pitch']) if (body[k] !== undefined && body[k] !== '') out[k] = Number(body[k])
+  for (const k of ['x', 'y', 'z', 'yaw', 'pitch', 'seconds', 'slot']) if (body[k] !== undefined && body[k] !== '') out[k] = Number(body[k])
   return out
 }
 
@@ -119,7 +120,7 @@ async function handleAction (res, body, send, log) {
 
   // ③ 单次动作（如果这个账号正在连点，先停掉，避免打架）
   const wasLooping = clearLoop(p.account, log)
-  const r = await yambAction(p.account, p)
+  const r = await yambAction(p.account, p, p.act === 'dropall' ? 40000 : undefined)
   return send(res, 200, {
     ok: !!r.success,
     message: (wasLooping ? '（已停掉原有连点）' : '') + (r.message || '动作未执行'),

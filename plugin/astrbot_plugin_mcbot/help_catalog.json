@@ -1,0 +1,1558 @@
+[
+ {
+  "key": "astrbot_plugin_AstrNa",
+  "name": "AstrNa",
+  "desc": "AstrNa是一款AstrBot优化插件",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/analyze",
+    "desc": "调用源码辅助分析流程。",
+    "alias": []
+   },
+   {
+    "cmd": "/astrna",
+    "desc": "issue ... 分组写法；下划线形式 /astrna_issue_latest、/ast",
+    "alias": []
+   },
+   {
+    "cmd": "/astrna_issue_analyze",
+    "desc": "调用源码辅助分析流程。",
+    "alias": []
+   },
+   {
+    "cmd": "/astrna_issue_cancel",
+    "desc": "丢弃 AstrNa Issue 草稿。",
+    "alias": []
+   },
+   {
+    "cmd": "/astrna_issue_draft",
+    "desc": "等继续作为兼容入口保留。",
+    "alias": []
+   },
+   {
+    "cmd": "/astrna_issue_edit",
+    "desc": "为 AstrNa Issue 草稿追加补充说明。",
+    "alias": []
+   },
+   {
+    "cmd": "/astrna_issue_ignore",
+    "desc": "忽略 AstrNa 最近一次报错。",
+    "alias": []
+   },
+   {
+    "cmd": "/astrna_issue_latest",
+    "desc": "astrna_issue_draft 等继续作为兼容入口保留。",
+    "alias": []
+   },
+   {
+    "cmd": "/astrna_issue_submit",
+    "desc": "确认提交 AstrNa Issue 草稿。",
+    "alias": []
+   },
+   {
+    "cmd": "/cancel",
+    "desc": "丢弃 AstrNa Issue 草稿。",
+    "alias": []
+   },
+   {
+    "cmd": "/draft",
+    "desc": "生成或查看 AstrNa Issue 草稿。",
+    "alias": []
+   },
+   {
+    "cmd": "/edit",
+    "desc": "为 AstrNa Issue 草稿追加补充说明。",
+    "alias": []
+   },
+   {
+    "cmd": "/ignore",
+    "desc": "忽略 AstrNa 最近一次报错。",
+    "alias": []
+   },
+   {
+    "cmd": "/latest",
+    "desc": "查看 AstrNa 最近一次报错分析。",
+    "alias": []
+   },
+   {
+    "cmd": "/submit",
+    "desc": "确认提交 AstrNa Issue 草稿。",
+    "alias": []
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_angel_eye",
+  "name": "天使之眼",
+  "desc": "群聊聊天记录查询工具：让LLM按关键词和时间翻旧账、回看QQ群聊记录，群聊专用函数调用。",
+  "readme": "README.md",
+  "cmds": [],
+  "passive": true
+ },
+ {
+  "key": "astrbot_plugin_anti_revoke",
+  "name": "QQ 防撤回",
+  "desc": "支持监控 QQ 群被撤回的消息并将撤回通知发送至目标会话。",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/取消撤回转发",
+    "desc": "取消指定群的转发目标。如果不带目标参数，则重置该群回默认转发配置。",
+    "alias": []
+   },
+   {
+    "cmd": "/撤回转发",
+    "desc": "为指定群设置转发目标。格式：@数字 (私聊), #数字 (群聊)。支持多次设置以转发到多个目",
+    "alias": [
+     "无"
+    ]
+   },
+   {
+    "cmd": "/查看撤回转发",
+    "desc": "查看当前所有自定义的撤回转发配置。",
+    "alias": [
+     "无"
+    ]
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_apis",
+  "name": "API聚合",
+  "desc": "API聚合插件, 海量免费API动态添加, 支持用面板管理",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/查看api",
+    "desc": "查看已配置的 API 聚合信息",
+    "alias": [
+     "查看api列表",
+     "api列表"
+    ]
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_cs_match",
+  "name": "CS2 比赛推送",
+  "desc": "CS2 赛程查询与比赛推送，支持战队关注、赛前提醒、赛后结果、每日赛程和 Web 管理面板。",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/cs关注",
+    "desc": "关注 / 取消关注战队",
+    "alias": []
+   },
+   {
+    "cmd": "/cs关注列表",
+    "desc": "查看推送群 / 关注战队",
+    "alias": []
+   },
+   {
+    "cmd": "/cs刷新",
+    "desc": "立即刷新赛程",
+    "alias": [
+     "立即刷新赛程"
+    ]
+   },
+   {
+    "cmd": "/cs取消",
+    "desc": "关注 / 取消关注战队",
+    "alias": []
+   },
+   {
+    "cmd": "/cs帮助",
+    "desc": "查看完整帮助",
+    "alias": [
+     "查看完整帮助"
+    ]
+   },
+   {
+    "cmd": "/cs延迟通知",
+    "desc": "开关赛程变更通知",
+    "alias": [
+     "开关赛程变更通知"
+    ]
+   },
+   {
+    "cmd": "/cs推送",
+    "desc": "立即发送赛程日报，1～7 天",
+    "alias": []
+   },
+   {
+    "cmd": "/cs提醒",
+    "desc": "设置赛前提醒，1～120 分钟",
+    "alias": []
+   },
+   {
+    "cmd": "/cs日报",
+    "desc": "设置日报赛程范围，1～7 天",
+    "alias": [
+     "查看日报配置和子命令"
+    ]
+   },
+   {
+    "cmd": "/cs比赛",
+    "desc": "查看赛程 / 当前设置",
+    "alias": []
+   },
+   {
+    "cmd": "/cs测试",
+    "desc": "查看测试模式帮助",
+    "alias": [
+     "查看测试模式帮助"
+    ]
+   },
+   {
+    "cmd": "/cs状态",
+    "desc": "查看赛程 / 当前设置",
+    "alias": []
+   },
+   {
+    "cmd": "/cs移除群",
+    "desc": "添加 / 移除推送群",
+    "alias": []
+   },
+   {
+    "cmd": "/cs群列表",
+    "desc": "查看推送群 / 关注战队",
+    "alias": []
+   },
+   {
+    "cmd": "/cs设置群",
+    "desc": "添加 / 移除推送群",
+    "alias": []
+   },
+   {
+    "cmd": "/cs赛事提醒",
+    "desc": "开关 / 设置开幕提醒，1～24 小时",
+    "alias": []
+   },
+   {
+    "cmd": "/cs面板",
+    "desc": "获取面板地址和令牌",
+    "alias": [
+     "获取面板地址和令牌"
+    ]
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_deepseek_search",
+  "name": "DeepSeek 官方搜索接入",
+  "desc": "|",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/dfetch",
+    "desc": "人工抓取网页",
+    "alias": [
+     "dsf",
+     "dsfetch"
+    ]
+   },
+   {
+    "cmd": "/dsearch",
+    "desc": "人工快速搜索",
+    "alias": [
+     "ds",
+     "dssearch"
+    ]
+   },
+   {
+    "cmd": "/dshelp",
+    "desc": "用法与计费说明",
+    "alias": []
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_fat_fish_wallet",
+  "name": "大肥鱼钱包保卫战",
+  "desc": "|",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/峰谷",
+    "desc": "强制放行，不受时段限制（同义：放行）",
+    "alias": [
+     "谷",
+     "时段",
+     "peak",
+     "钱包"
+    ]
+   },
+   {
+    "cmd": "/白名单",
+    "desc": "查看当前白名单",
+    "alias": [
+     "wl",
+     "whitelist",
+     "查看当前白名单"
+    ]
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_group_distiller",
+  "name": "我要蒸馏群友",
+  "desc": "收集群友语料并蒸馏成可导出的人设 / 风格",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/zl",
+    "desc": "查看面板与进度（别名 /蒸馏）",
+    "alias": []
+   },
+   {
+    "cmd": "/zl add <群号> <QQ号> [昵称]",
+    "desc": "添加一个蒸馏目标",
+    "alias": []
+   },
+   {
+    "cmd": "/zl del <QQ号> [purge]",
+    "desc": "删除目标；加 purge 连语料档案一起删",
+    "alias": []
+   },
+   {
+    "cmd": "/zl distill [目标]",
+    "desc": "立刻蒸馏（不填则蒸馏全部）",
+    "alias": []
+   },
+   {
+    "cmd": "/zl export",
+    "desc": "导出蒸馏结果",
+    "alias": []
+   },
+   {
+    "cmd": "/zl list",
+    "desc": "列出当前所有蒸馏目标",
+    "alias": []
+   },
+   {
+    "cmd": "/zl on / off",
+    "desc": "开启 / 关闭自动采集",
+    "alias": []
+   },
+   {
+    "cmd": "/zl set <群号> <QQ号> [昵称]",
+    "desc": "替换目标列表（保留已收集的语料）",
+    "alias": []
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_handsign_memes",
+  "name": "肥鱼说 Memes",
+  "desc": "让你的角色举牌说话的 AstrBot 表情包插件",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/肥鱼帮助",
+    "desc": "查看举牌插件用法（别名：举牌帮助）",
+    "alias": [
+     "举牌帮助"
+    ]
+   },
+   {
+    "cmd": "/肥鱼说",
+    "desc": "让肥鱼举牌说一句话（别名：肥鱼举牌）",
+    "alias": [
+     "肥鱼举牌"
+    ]
+   },
+   {
+    "cmd": "/调试网格",
+    "desc": "生成一张网格调试图，用来校准表情包格子尺寸",
+    "alias": []
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_litematic",
+  "name": "投影渲染",
+  "desc": "群里发 .litematic 附件自动出预览图",
+  "readme": "",
+  "cmds": [
+   {
+    "cmd": "/litematic",
+    "desc": "把 .litematic 投影当聊天附件发，自动出预览图（俯视 1 张 / 立体 2 张）",
+    "alias": []
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_mcbot",
+  "name": "MC 挂机控制（本插件）",
+  "desc": "私聊管理员控制 MC 挂机号、转钱、群白名单",
+  "readme": "",
+  "cmds": [
+   {
+    "cmd": "!mcbot <账号> command <指令>",
+    "desc": "以该号身份往游戏里发一条指令",
+    "alias": []
+   },
+   {
+    "cmd": "!mcbot <账号…>",
+    "desc": "翻转这些号：在线→下线，离线→上线（最多同时挂 3 个，例：!mcbot 1 2 3）",
+    "alias": []
+   },
+   {
+    "cmd": "!mcbot addpay <账号>",
+    "desc": "登记转钱小号（发微软网址 + 授权码完成登录）",
+    "alias": []
+   },
+   {
+    "cmd": "!mcbot enable|disable <账号…>",
+    "desc": "追加启用 / 单独关闭某个号",
+    "alias": []
+   },
+   {
+    "cmd": "!mcbot list",
+    "desc": "看 4 个挂机号的启用与在线状态",
+    "alias": []
+   },
+   {
+    "cmd": "!mcbot payauth <账号>",
+    "desc": "重发授权码（登录失效时用）",
+    "alias": []
+   },
+   {
+    "cmd": "!mcbot paylist",
+    "desc": "看转钱配置与今日尝试情况",
+    "alias": []
+   },
+   {
+    "cmd": "!mcbot payon|payoff <账号>",
+    "desc": "开关某个号的自动转钱",
+    "alias": []
+   },
+   {
+    "cmd": "!mcbot payset <收款人> <金额>",
+    "desc": "设置收款人与金额（全号统一，每天一次）",
+    "alias": []
+   },
+   {
+    "cmd": "!mcbot paytest [账号]",
+    "desc": "立刻跑一次转钱流程",
+    "alias": []
+   },
+   {
+    "cmd": "!mcbot set <账号…>",
+    "desc": "只挂这些号，其余全部下线",
+    "alias": []
+   },
+   {
+    "cmd": "!mcbot stop / start",
+    "desc": "全部下线 / 按上次的账号集合启动",
+    "alias": []
+   },
+   {
+    "cmd": "!mcbot yamb help",
+    "desc": "列出全部游戏动作与用法",
+    "alias": []
+   },
+   {
+    "cmd": "!qqbot add <群号>",
+    "desc": "把群加入白名单（会话白名单 + 群分析名单）",
+    "alias": []
+   },
+   {
+    "cmd": "!qqbot groups",
+    "desc": "查看已启用的群",
+    "alias": []
+   },
+   {
+    "cmd": "!qqbot help",
+    "desc": "全插件指令总目录",
+    "alias": []
+   },
+   {
+    "cmd": "!qqbot start / stop",
+    "desc": "开启 / 停用 AI 聊天（停用后只响应指令）",
+    "alias": []
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_meme_generator",
+  "name": "表情包生成插件",
+  "desc": "AstrBot 表情包生成插件，支持关键词触发、模板查询、冷却控制与禁用管理",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/单表情启用",
+    "desc": "重新启用模板",
+    "alias": [
+     "单meme启用"
+    ]
+   },
+   {
+    "cmd": "/单表情禁用",
+    "desc": "禁用指定模板",
+    "alias": [
+     "单meme禁用"
+    ]
+   },
+   {
+    "cmd": "/禁用列表",
+    "desc": "查看当前禁用模板",
+    "alias": []
+   },
+   {
+    "cmd": "/表情信息",
+    "desc": "查看模板名称、别名、参数和标签",
+    "alias": [
+     "meme信息"
+    ]
+   },
+   {
+    "cmd": "/表情列表",
+    "desc": "一次性查看全部模板",
+    "alias": [
+     "meme列表"
+    ]
+   },
+   {
+    "cmd": "/表情启用",
+    "desc": "启用整个插件",
+    "alias": [
+     "meme启用"
+    ]
+   },
+   {
+    "cmd": "/表情帮助",
+    "desc": "查看新版帮助菜单",
+    "alias": [
+     "meme帮助",
+     "meme菜单"
+    ]
+   },
+   {
+    "cmd": "/表情状态",
+    "desc": "查看运行状态和配置统计",
+    "alias": [
+     "meme状态"
+    ]
+   },
+   {
+    "cmd": "/表情禁用",
+    "desc": "禁用整个插件",
+    "alias": [
+     "meme禁用"
+    ]
+   },
+   {
+    "cmd": "/表情资源",
+    "desc": "查看资源初始化状态",
+    "alias": [
+     "meme资源",
+     "表情资源状态"
+    ]
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_memewiki",
+  "name": "梗百科",
+  "desc": "查梗：先查本地全量字典（毫秒级），未命中回落 cnmeme.wiki 公开 API；/梗 指令可出图片卡片，支持每天自动",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/梗",
+    "desc": "查梗，默认返回图片卡片（配置里是下拉选项：图片卡片 / 纯文字）",
+    "alias": []
+   },
+   {
+    "cmd": "/梗档案",
+    "desc": "看联网结果的本地档案：/梗档案 | /梗档案 <词> | /梗档案 清空（管理员）",
+    "alias": []
+   },
+   {
+    "cmd": "/网搜",
+    "desc": "切到让它自己搜的模式，或者把短句补进 /黑话。",
+    "alias": []
+   },
+   {
+    "cmd": "/黑话",
+    "desc": "记一条群内自造黑话，独立于内置词库保存",
+    "alias": []
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_memory_companion",
+  "name": "我会牢牢记住你",
+  "desc": "为 AstrBot 提供主链记忆注入、历史聊天整理导入、连续对话记忆、陪伴插件协同、主动记忆/回忆工具、知识图谱、权限边",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/mcomp",
+    "desc": "生成带原始事件证据的记忆审计预览，不修改数据库",
+    "alias": [
+     "companion"
+    ]
+   },
+   {
+    "cmd": "/mcomp add",
+    "desc": "手动添加当前会话记忆",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp archive",
+    "desc": "归档记忆",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp audit",
+    "desc": "生成带原始事件证据的记忆审计预览，不修改数据库",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp clear_scope",
+    "desc": "预览或清空某个群里某个人的相关记忆",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp data",
+    "desc": "导出 UTF-8 JSONL 可移植档案",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp delete",
+    "desc": "删除记忆",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp diagnostics",
+    "desc": "或在维护页点击“生成诊断”，可以查看：",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp explain",
+    "desc": "查看召回、分槽和过滤原因",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp help",
+    "desc": "",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp import_livingmemory",
+    "desc": "预览 LivingMemory 导入",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp logs",
+    "desc": "查看最近注入日志",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp maintenance",
+    "desc": "运行维护",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp preset",
+    "desc": "应用轻量、标准或陪伴预设",
+    "alias": [
+     "companion"
+    ]
+   },
+   {
+    "cmd": "/mcomp promote",
+    "desc": "提升为稳定记忆",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp recent",
+    "desc": "查看最近可见记忆",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp relations",
+    "desc": "查看关系边",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp search",
+    "desc": "按当前会话可见性检索记忆",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp sleep",
+    "desc": "查看最近睡眠维护",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp status",
+    "desc": "",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp summarize",
+    "desc": "立即总结当前会话时间线",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp threads",
+    "desc": "查看跨窗口线程",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp timeline",
+    "desc": "查看最近时间线",
+    "alias": []
+   },
+   {
+    "cmd": "/mcomp visibility",
+    "desc": "修改记忆可见性",
+    "alias": []
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_music",
+  "name": "点歌插件",
+  "desc": "高性能低耦合的点歌插件, 支持AI点歌、卡片播放、语音播放、热评、歌词、歌单、多音源、无需VIP",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/查歌词",
+    "desc": "查询并发送歌词",
+    "alias": [
+     "查看歌词"
+    ]
+   },
+   {
+    "cmd": "/点歌",
+    "desc": "点歌 <歌名>（网易/QQ/酷狗/酷我/咪咕等音源）",
+    "alias": [
+     "网易点歌",
+     "网易nj",
+     "QQ点歌",
+     "酷狗点歌"
+    ]
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_onelastimage",
+  "name": "astrbot_plugin_onelastim",
+  "desc": "One Last Kiss 卢浮宫风格图片生成器",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/onelast",
+    "desc": "把图片转成 One Last Kiss 卢浮宫风格（可带参数 JSON）",
+    "alias": []
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_palette",
+  "name": "AstrBot调色盘",
+  "desc": "AstrBot调色盘是一个 AstrBot WebUI 美化插件",
+  "readme": "README.md",
+  "cmds": [],
+  "passive": true
+ },
+ {
+  "key": "astrbot_plugin_parser",
+  "name": "万能解析器",
+  "desc": "高性能低耦合的万能链接解析器。支持的类型：视频、图集、音频。 支持的平台：A站、B站、抖音、tiktok、微博、小红书、",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/关闭解析",
+    "desc": "关闭当前会话的解析功能",
+    "alias": [
+     "ADMIN"
+    ]
+   },
+   {
+    "cmd": "/开启解析",
+    "desc": "开启当前会话的解析功能",
+    "alias": [
+     "ADMIN"
+    ]
+   },
+   {
+    "cmd": "/登录B站",
+    "desc": "扫码获取 B 站凭证",
+    "alias": [
+     "blogin",
+     "登录b站"
+    ]
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_pokepro",
+  "name": "专业戳一戳",
+  "desc": "【专业的戳一戳插件】支持触发（反戳：LLM：face：图库：语音：禁言：命令），戳@某人，跟戳",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/戳",
+    "desc": "戳 @某人 / 我 / 全体成员",
+    "alias": [
+     "戳我",
+     "戳全体成员"
+    ]
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_portrayal",
+  "name": "人物画像",
+  "desc": "爬取群友的聊天记录，进而用llm分析群友画像",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/切换人格",
+    "desc": "把当前会话切到该群友的克隆人格，并同步 bot 的 QQ 昵称/头像。前置：需先执行「克隆人",
+    "alias": [
+     "Admin"
+    ]
+   },
+   {
+    "cmd": "/恢复人格",
+    "desc": "一键还原：恢复默认人格、清空当前对话历史、还原 bot 昵称/头像",
+    "alias": [
+     "Admin"
+    ]
+   },
+   {
+    "cmd": "/查看画像",
+    "desc": "查看本地已生成的画像",
+    "alias": [
+     "所有人"
+    ]
+   },
+   {
+    "cmd": "克隆人格",
+    "desc": "生成可用于「切换人格」的 system prompt，保存为该群友的克隆模板",
+    "alias": [],
+    "bare": true
+   },
+   {
+    "cmd": "找对象",
+    "desc": "自定义提示词：你是一位资深红娘，擅长基于聊天记录，通过语言行为分析为用户从而推荐最契合的伴侣类型。",
+    "alias": [],
+    "bare": true
+   },
+   {
+    "cmd": "正画像",
+    "desc": "偏优点向的画像",
+    "alias": [],
+    "bare": true
+   },
+   {
+    "cmd": "画像",
+    "desc": "综合性格画像（含优点/缺点/相处建议）",
+    "alias": [],
+    "bare": true
+   },
+   {
+    "cmd": "负画像",
+    "desc": "偏缺点向的画像（理性审判风格）",
+    "alias": [],
+    "bare": true
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_psychological",
+  "name": "心理委员",
+  "desc": "心理委员：从本地图库随机发图，支持在 QQ 里上传",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/add",
+    "desc": "回复（引用）一条带图的消息，把其中的图片收进心理委员库（仅主人）",
+    "alias": []
+   },
+   {
+    "cmd": "/心理委员",
+    "desc": "时，会随机回复一句温馨的提示语，然后从多个 API 中随机选择一个获取并发送一张图片。",
+    "alias": []
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_qq_group_daily_analysis",
+  "name": "群分析总结插件",
+  "desc": "群日常分析总结插件 - 支持 OneBot (NapCat, LLOneBot, Snowluma)、QQ 官方机器人、",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/分析设置",
+    "desc": "管理分析设置（跨平台支持）",
+    "alias": [
+     "analysis_settings"
+    ]
+   },
+   {
+    "cmd": "/增量状态",
+    "desc": "查看当前增量分析状态（滑动窗口）",
+    "alias": [
+     "incremental_status"
+    ]
+   },
+   {
+    "cmd": "/查看模板",
+    "desc": "查看所有可用模板及预览图",
+    "alias": [
+     "view_templates"
+    ]
+   },
+   {
+    "cmd": "/群分析",
+    "desc": "3 分析最近3天的群聊",
+    "alias": [
+     "group_analysis",
+     "群总结"
+    ]
+   },
+   {
+    "cmd": "/群漫画",
+    "desc": "enable_daily_comic 是总开关，enable_auto_daily_comi",
+    "alias": [
+     "group_comic",
+     "daily_comic"
+    ]
+   },
+   {
+    "cmd": "/设置格式",
+    "desc": "设置分析报告输出格式（跨平台支持）",
+    "alias": [
+     "set_format"
+    ]
+   },
+   {
+    "cmd": "/设置模板",
+    "desc": "1 或 /设置模板 scrapbook",
+    "alias": [
+     "set_template"
+    ]
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_repeater",
+  "name": "群复读机",
+  "desc": "群复读机：当群内连续 N 个不同的人发送相同消息时，机器人自动跟一条。支持文本、真实艾特、小黄脸、图片/表情包复读，支持",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/复读机",
+    "desc": "群复读机：开 / 关 / 阈值 / 冷却 / 状态",
+    "alias": []
+   },
+   {
+    "cmd": "/复读机 关",
+    "desc": "关闭本群复读机模式",
+    "alias": []
+   },
+   {
+    "cmd": "/复读机 冷却",
+    "desc": "设置触发冷却为 30 秒（0 表示无冷却）",
+    "alias": []
+   },
+   {
+    "cmd": "/复读机 开",
+    "desc": "开启本群复读机模式",
+    "alias": []
+   },
+   {
+    "cmd": "/复读机 状态",
+    "desc": "查看本群复读机当前状态",
+    "alias": []
+   },
+   {
+    "cmd": "/复读机 阈值",
+    "desc": "设置触发人数为 5 人",
+    "alias": []
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_sb6657",
+  "name": "6657 玩机器烂梗",
+  "desc": "从 sb6657.cn（玩机器烂梗收集）获取直播间烂梗，支持随机抽取、关键词搜索、24h/7天热榜和标签筛选；说「xxx",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/machine",
+    "desc": "getRandOne、/machine/Page、",
+    "alias": []
+   },
+   {
+    "cmd": "/烂梗",
+    "desc": "关键词搜索（默认 search_count 条）",
+    "alias": []
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_selfid_fix",
+  "name": "self_id 补丁（多连接修复）",
+  "desc": "给 aiocqhttp 的 call_action 补 self_id（UnifiedApi / WebSocketRe",
+  "readme": "",
+  "cmds": [],
+  "passive": true
+ },
+ {
+  "key": "astrbot_plugin_setu",
+  "name": "瑟瑟！",
+  "desc": "随机福利图与随机本子文件插件，支持标签与数量、图片分级控制，以及 PDF/ZIP 两种本子发送格式。",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/session_config",
+    "desc": "命令或 LLM tool 读写 session_overrides.json",
+    "alias": []
+   },
+   {
+    "cmd": "/setu",
+    "desc": "随机涩图（支持标签、数量、分级）",
+    "alias": []
+   },
+   {
+    "cmd": "/今日运势",
+    "desc": "查看今日运势（每天一次）",
+    "alias": [
+     "jrys",
+     "无"
+    ]
+   },
+   {
+    "cmd": "/信任色图用户",
+    "desc": "将用户加入色图白名单（必须AT）",
+    "alias": []
+   },
+   {
+    "cmd": "/关闭色图",
+    "desc": "在本群关闭色图功能（加入色图群组黑名单）",
+    "alias": []
+   },
+   {
+    "cmd": "/开启色图",
+    "desc": "在本群开启色图功能（移出色图群组黑名单）",
+    "alias": []
+   },
+   {
+    "cmd": "/拉黑色图用户",
+    "desc": "将用户加入色图黑名单（必须AT）",
+    "alias": []
+   },
+   {
+    "cmd": "/运势刷新",
+    "desc": "刷新自己的今日运势",
+    "alias": [
+     "刷新今日运势",
+     "刷新jrys",
+     "flush_jrys",
+     "刷新本群今日运势"
+    ]
+   },
+   {
+    "cmd": "/运势开关",
+    "desc": "在本群开启运势功能（移出运势群组黑名单）",
+    "alias": [
+     "开启运势",
+     "关闭运势"
+    ]
+   },
+   {
+    "cmd": "/运势用户",
+    "desc": "将用户从运势黑名单移除（必须AT）",
+    "alias": [
+     "拉黑运势用户",
+     "解除运势拉黑",
+     "信任运势用户",
+     "取消运势信任"
+    ]
+   },
+   {
+    "cmd": "/随机本子",
+    "desc": "随机本子（别名 /本子、/doujinshi）",
+    "alias": [
+     "本子",
+     "doujinshi"
+    ]
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_stealer",
+  "name": "表情包小偷",
+  "desc": "人机代码，仿maibot的表情包偷取。让bot自动偷走别人的表情包并为己所用。配置好视觉模型就能自动识别分类，对话时根据",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/meme",
+    "desc": "capacity 和重建后的容量检查使用相同规则。入库时间和使用历史不因切换库而重置。",
+    "alias": []
+   },
+   {
+    "cmd": "/meme auto_off",
+    "desc": "关闭自动发送表情包。",
+    "alias": []
+   },
+   {
+    "cmd": "/meme auto_on",
+    "desc": "开启自动发送",
+    "alias": []
+   },
+   {
+    "cmd": "/meme blacklist",
+    "desc": "拉黑指定表情包。用法: /meme blacklist <序号|文件名>",
+    "alias": []
+   },
+   {
+    "cmd": "/meme capacity",
+    "desc": "和重建后的容量检查使用相同规则。入库时间和使用历史不因切换库而重置。",
+    "alias": []
+   },
+   {
+    "cmd": "/meme clean",
+    "desc": "清理原始图片缓存（不影响已分类的表情包）。",
+    "alias": []
+   },
+   {
+    "cmd": "/meme clear_emotion_cache",
+    "desc": "清空情绪分析缓存，释放内存。",
+    "alias": []
+   },
+   {
+    "cmd": "/meme delete",
+    "desc": "删除指定表情包。用法: /meme delete <序号|文件名>",
+    "alias": []
+   },
+   {
+    "cmd": "/meme emotion_stats",
+    "desc": "查看情绪分析统计信息和当前模式。",
+    "alias": []
+   },
+   {
+    "cmd": "/meme group",
+    "desc": "管理发送与收集目标名单。用法: /meme group <send|steal> <wl|b",
+    "alias": []
+   },
+   {
+    "cmd": "/meme list",
+    "desc": "列出已收集的表情包。用法: /meme list [分类] [每页数量] [页码]",
+    "alias": []
+   },
+   {
+    "cmd": "/meme natural_analysis",
+    "desc": "切换情绪识别模式。用法: /meme natural_analysis <on|off>",
+    "alias": []
+   },
+   {
+    "cmd": "/meme off",
+    "desc": "关闭偷图，已收集的表情包仍可使用",
+    "alias": []
+   },
+   {
+    "cmd": "/meme on",
+    "desc": "开启偷图",
+    "alias": []
+   },
+   {
+    "cmd": "/meme rebuild_index",
+    "desc": "重建表情包索引，用于修复索引异常或版本迁移。",
+    "alias": []
+   },
+   {
+    "cmd": "/meme scope",
+    "desc": "设置表情包作用域。用法: /meme scope <序号|文件名> <public|loca",
+    "alias": []
+   },
+   {
+    "cmd": "/meme status",
+    "desc": "查看插件运行状态和表情包统计信息。",
+    "alias": []
+   },
+   {
+    "cmd": "/meme tag_stats",
+    "desc": "标签/场景统计：高频标签、低频噪声标签、零标签条目（打标质量体检）。用法: /meme ta",
+    "alias": []
+   },
+   {
+    "cmd": "/meme 偷",
+    "desc": "进入 30 秒强制收录模式，期间发送的图片直接入库",
+    "alias": []
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "astrbot_plugin_what_to_eat",
+  "name": "是啊，吃什么",
+  "desc": "一款为 AstrBot 开发的简单有趣的插件，帮助大学生解决每天最头疼的问题——今天吃什么？",
+  "readme": "README.md",
+  "cmds": [],
+  "passive": true
+ },
+ {
+  "key": "astrbot_plugin_wifepicker",
+  "name": "今日老婆",
+  "desc": "全新的抽取群友当老婆的插件，可以增进群友的感情（）。只抽一个月内取发言过的人，并且可生成老婆关系图，还可以强娶哦~",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/debug_graph",
+    "desc": "生成关系图调试数据",
+    "alias": []
+   },
+   {
+    "cmd": "/rbq排行",
+    "desc": "展示近30天被强娶的次数排行（前10名）",
+    "alias": [
+     "rbqph",
+     "wifeleaderboard",
+     "用户"
+    ]
+   },
+   {
+    "cmd": "/今日老婆",
+    "desc": "随机抽取一名今日老婆",
+    "alias": [
+     "抽老婆",
+     "jrlp",
+     "dailywife",
+     "wife"
+    ]
+   },
+   {
+    "cmd": "/关系图",
+    "desc": "生成并发送本群今日的老婆关系网络图",
+    "alias": [
+     "gxt",
+     "relations",
+     "羁绊图谱",
+     "用户"
+    ]
+   },
+   {
+    "cmd": "/分手",
+    "desc": "每日上限大于 1 时显示离婚列表，可选择一人或全部离婚；强娶关系不可解除，成功后冷却 72",
+    "alias": [
+     "fs",
+     "breakup",
+     "离婚",
+     "用户"
+    ]
+   },
+   {
+    "cmd": "/强娶",
+    "desc": "消耗次数强制与指定用户建立羁绊",
+    "alias": [
+     "qiangqu",
+     "forcemarry",
+     "用户"
+    ]
+   },
+   {
+    "cmd": "/我的老婆",
+    "desc": "查看今天抽到的记录及剩余次数",
+    "alias": [
+     "抽取历史",
+     "wdlp",
+     "mywife",
+     "用户"
+    ]
+   },
+   {
+    "cmd": "/抽老婆帮助",
+    "desc": "查看详细指令说明",
+    "alias": [
+     "老婆插件帮助",
+     "clpbz",
+     "wifehelp",
+     "用户"
+    ]
+   },
+   {
+    "cmd": "/挑选老婆",
+    "desc": "从随机抽取的候选群友中选择一位成为今日老婆",
+    "alias": [
+     "txlp",
+     "pickwife",
+     "用户"
+    ]
+   },
+   {
+    "cmd": "/查看好感度",
+    "desc": "实验性功能：查看对方对自己的好感度，默认关闭",
+    "alias": [
+     "affinity",
+     "查询好感度",
+     "用户"
+    ]
+   },
+   {
+    "cmd": "/求婚",
+    "desc": "向群友发起求婚",
+    "alias": [
+     "qh",
+     "propose",
+     "用户"
+    ]
+   },
+   {
+    "cmd": "/花心大萝卜榜",
+    "desc": "近30天向不同对象求婚的人数及成功人数（前10名，图片榜单，失败回退文字）",
+    "alias": [
+     "海王榜",
+     "花心榜",
+     "hxb",
+     "hxdlbb"
+    ]
+   },
+   {
+    "cmd": "/调整好感度",
+    "desc": "只修改自己对对方的好感度",
+    "alias": [
+     "setaffinity",
+     "用户"
+    ]
+   },
+   {
+    "cmd": "/重置强娶时间",
+    "desc": "清空当前群所有人的强娶冷却 CD",
+    "alias": [
+     "czqqsj",
+     "管理员"
+    ]
+   },
+   {
+    "cmd": "/重置求婚时间",
+    "desc": "清空当前群所有人的求婚冷却 CD",
+    "alias": [
+     "czqhsj",
+     "管理员"
+    ]
+   },
+   {
+    "cmd": "/重置记录",
+    "desc": "清空所有今日抽取记录",
+    "alias": [
+     "czjl",
+     "管理员"
+    ]
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "ineedmoney",
+  "name": "AI API 余额监控",
+  "desc": "定时检查 DeepSeek 或自定义 API 余额，并在余额不足时向指定会话发送充值提醒和收款码。",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/余额查询",
+    "desc": "立即查询余额并返回结果，同时验证接口配置。",
+    "alias": []
+   },
+   {
+    "cmd": "/余额监控会话",
+    "desc": "返回当前会话的 unified_msg_origin，用于配置通知白名单。",
+    "alias": []
+   },
+   {
+    "cmd": "/余额监控状态",
+    "desc": "查看后台最近一次检查结果，不额外请求余额 API。",
+    "alias": []
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "meme_manager",
+  "name": "表情包管理器",
+  "desc": ">-",
+  "readme": "README.md",
+  "cmds": [
+   {
+    "cmd": "/表情管理",
+    "desc": "➕ 创建新的表情包分类，可只输入名称后按提示补充描述",
+    "alias": []
+   },
+   {
+    "cmd": "/表情管理 从云端同步",
+    "desc": "⬇️ 从云端同步表情到本地",
+    "alias": []
+   },
+   {
+    "cmd": "/表情管理 从云端覆盖",
+    "desc": "⚠️ 让本地与云端完全一致",
+    "alias": []
+   },
+   {
+    "cmd": "/表情管理 删除类型本身",
+    "desc": "⚠️ 删除指定类型及其描述配置",
+    "alias": []
+   },
+   {
+    "cmd": "/表情管理 同步到云端",
+    "desc": "☁️ 将本地表情同步到云端",
+    "alias": []
+   },
+   {
+    "cmd": "/表情管理 同步状态",
+    "desc": "🔄 检查同步状态",
+    "alias": []
+   },
+   {
+    "cmd": "/表情管理 图库统计",
+    "desc": "显示图库详细统计信息",
+    "alias": []
+   },
+   {
+    "cmd": "/表情管理 恢复默认表情包",
+    "desc": "♻️ 从官方仓库一键安装首个官方表情包并设为默认",
+    "alias": []
+   },
+   {
+    "cmd": "/表情管理 查看图库",
+    "desc": "📚 列出所有可用表情类别",
+    "alias": []
+   },
+   {
+    "cmd": "/表情管理 添加分类",
+    "desc": "➕ 创建新的表情包分类，可只输入名称后按提示补充描述",
+    "alias": []
+   },
+   {
+    "cmd": "/表情管理 添加表情",
+    "desc": "➕ 通过聊天上传表情到指定类别",
+    "alias": []
+   },
+   {
+    "cmd": "/表情管理 清空全部",
+    "desc": "⚠️ 清空全部表情包，保留所有类型和描述配置",
+    "alias": []
+   },
+   {
+    "cmd": "/表情管理 清空指定类型",
+    "desc": "⚠️ 清空指定类别中的表情包，保留类型本身",
+    "alias": []
+   },
+   {
+    "cmd": "/表情管理 覆盖到云端",
+    "desc": "⚠️ 让云端与本地完全一致",
+    "alias": []
+   }
+  ],
+  "passive": false
+ },
+ {
+  "key": "__builtin__",
+  "name": "AstrBot 内置",
+  "desc": "框架自带，不依赖任何插件",
+  "readme": "",
+  "passive": false,
+  "cmds": [
+   {
+    "cmd": "/help",
+    "desc": "显示框架帮助 / 指令列表",
+    "alias": []
+   },
+   {
+    "cmd": "/new",
+    "desc": "新建并切换会话",
+    "alias": []
+   },
+   {
+    "cmd": "/reset",
+    "desc": "重置当前会话上下文",
+    "alias": []
+   },
+   {
+    "cmd": "/set",
+    "desc": "设置当前会话变量",
+    "alias": []
+   },
+   {
+    "cmd": "/unset",
+    "desc": "删除当前会话变量",
+    "alias": []
+   },
+   {
+    "cmd": "/stats",
+    "desc": "查看当前会话 token 统计",
+    "alias": []
+   },
+   {
+    "cmd": "/name",
+    "desc": "设置当前会话的显示别名（管理员）",
+    "alias": []
+   },
+   {
+    "cmd": "/provider",
+    "desc": "查看或切换模型供应商（管理员）",
+    "alias": []
+   },
+   {
+    "cmd": "/sid",
+    "desc": "获取当前会话的完整 UMO（配置主动消息/官机时用）",
+    "alias": []
+   },
+   {
+    "cmd": "/persona",
+    "desc": "切换人格",
+    "alias": []
+   },
+   {
+    "cmd": "/dashboard_update",
+    "desc": "更新 AstrBot WebUI（管理员）",
+    "alias": []
+   },
+   {
+    "cmd": "/websearch",
+    "desc": "开关联网搜索",
+    "alias": []
+   },
+   {
+    "cmd": "/stop",
+    "desc": "停止当前正在进行的生成 / 任务",
+    "alias": []
+   },
+   {
+    "cmd": "/history",
+    "desc": "查看当前会话的历史消息",
+    "alias": []
+   }
+  ]
+ }
+]

@@ -6,7 +6,7 @@
  *        start 且没有用户名 → 回 { ok:true, need_username:true }
  *        start 且给了用户名 → 校验并登记（2~16 个中英文/数字/下划线，不能有空格冒号）
  *        stop → 关闭；status → 查状态
- *        状态存 controller/connect.json（重启不丢）
+ *        状态存 /opt/qqbot/mcbot/connect.json（重启不丢）
  *
  *   POST /mcsay { qq, text }
  *        · 只有已开启的用户能用
@@ -27,17 +27,16 @@ const fs = require('fs')
 const http = require('http')
 const { execFileSync } = require('child_process')
 
-const { env, envAbs, repoPath } = require('../lib/env')
-const CONNECT_FILE = __dirname + '/connect.json'
-const YAMB_LOG = envAbs('YAMB_DIR', repoPath('yamb')) + '/yamb.log'
+const CONNECT_FILE = '/opt/qqbot/mcbot/connect.json'
+const YAMB_LOG = '/opt/qqbot/yamb/yamb.log'
 const RELAY_MS = 2000
 const MAX_LEN = 120
 const TAIL_LINES = 2000
 const NAME_RE = /^[0-9A-Za-z_\u4e00-\u9fa5]{2,16}$/
 
-const ACCOUNTS = require('../lib/fleet').ACCOUNTS
+const ACCOUNTS = ['sd_dt', '___Fr0g___', '___donk666___', 'Nekoade_MAP']
 const BLOCK_DEFAULT = ['TSL', 'XMCBot01', 'XMCBot02', 'Server', 'CONSOLE', 'SYS', 'Bot']
-const NAPCAT = { host: env('NAPCAT_HOST', '127.0.0.1'), port: env.int('NAPCAT_PRIMARY_PORT', 3000), token: env.require('NAPCAT_TOKEN') }
+const NAPCAT = { host: '127.0.0.1', port: 3000, token: process.env.ONEBOT_TOKEN || 'change-me' }
 
 // ── 状态 ────────────────────────────────────────────────
 function loadState () {
@@ -55,12 +54,19 @@ function entryOf (s, qq) {
 }
 
 // ── 解析一行日志 ────────────────────────────────────────
+// _p72: MC 服务器的聊天过滤会把 emoji 等非白名单字符按 UTF-16 code unit
+// 替换成 U+FFFD（�）后才广播，bot 收到的已是坏数据、无法恢复原文；
+// 把连续替换符合成一个 □，避免 QQ 端刷一长串乱码豆腐块。
+function cleanText (s) {
+  return s.replace(/\uFFFD+/g, '□')
+}
+
 function parseLine (line) {
   if (!line) return null
   let m = /\[MC:chat\]\s*([^:]{1,24}):\s*(\S.*)$/.exec(line)
-  if (m) return { player: m[1].trim(), text: m[2].trim() }
+  if (m) return { player: m[1].trim(), text: cleanText(m[2].trim()) }
   m = /\[MC:system\]\s*<([^>]{1,24})>\s*(\S.*)$/.exec(line)
-  if (m) return { player: m[1].trim(), text: m[2].trim() }
+  if (m) return { player: m[1].trim(), text: cleanText(m[2].trim()) }
   return null
 }
 
@@ -220,15 +226,15 @@ module.exports = {
 // ── 自测：node connect.js --selftest ────────────────────
 if (require.main === module && process.argv.indexOf('--selftest') >= 0) {
   const samples = [
-    ['[Bot:bot1][MC:chat] 玩家甲: 润！', '玩家甲', '润！'],
-    ['[Bot:bot1][MC:chat] 玩家乙: 测试消息', '玩家乙', '测试消息'],
-    ['[Bot:bot1][MC:chat] 玩家丙: 你亲了 bot1 一口~ ♥', '玩家丙', '你亲了 bot1 一口~ ♥'],
-    ['[Bot:bot1][MC:system] <玩家乙> 测试', '玩家乙', '测试'],
-    ['[Bot:bot1][MC:system] ＋ 玩家丁 加入了服务器', null, null],
-    ['[Bot:bot1][MC:system] [玩家丙] 你亲了 bot1 一口~ ♥', null, null],
-    ['[Bot:bot1][MC:join] xxx', null, null],
-    ['[Bot:bot1][MC:leave] xxx', null, null],
-    ['[Bot:bot1][MC:system] － 玩家戊 离开了服务器', null, null]
+    ['[Bot:___Fr0g___][MC:chat] Wqingqing: 润！', 'Wqingqing', '润！'],
+    ['[Bot:___Fr0g___][MC:chat] fana114514: ?????????????????????', 'fana114514', '?????????????????????'],
+    ['[Bot:___Fr0g___][MC:chat] TSL: 你亲了 sd_dt 一口~ ♥', 'TSL', '你亲了 sd_dt 一口~ ♥'],
+    ['[Bot:___Fr0g___][MC:system] <fana114514> ?????', 'fana114514', '?????'],
+    ['[Bot:___Fr0g___][MC:system] ＋ IN_OF_DREAM 加入了服务器', null, null],
+    ['[Bot:___Fr0g___][MC:system] [TSL] 你亲了 sd_dt 一口~ ♥', null, null],
+    ['[Bot:___Fr0g___][MC:join] xxx', null, null],
+    ['[Bot:___Fr0g___][MC:leave] xxx', null, null],
+    ['[Bot:___Fr0g___][MC:system] － ha_ji_lin 离开了服务器', null, null]
   ]
   let fail = 0
   for (const [line, wantP, wantT] of samples) {
@@ -239,14 +245,14 @@ if (require.main === module && process.argv.indexOf('--selftest') >= 0) {
 
   const cases = [
     ['Wqingqing', false], ['fana114514', false], ['TSL', true], ['XMCBot01', true],
-    ['bot1', true], ['bot2', true], ['bot3', true], ['bot4', true], ['', true]
+    ['sd_dt', true], ['___Fr0g___', true], ['___donk666___', true], ['Nekoade_MAP', true], ['', true]
   ]
   for (const [name, want] of cases) {
     const got = module.exports.isBlocked(name)
     if (got !== want) { fail++; console.log('  ✗ 过滤 ' + JSON.stringify(name) + ' 期望 ' + want + ' 得到 ' + got) } else { console.log('  ✓ 过滤 ' + JSON.stringify(name) + ' = ' + got) }
   }
 
-  const names = [['ab', true], ['a', false], ['bot1', true], ['玩家甲', true], ['has space', false], ['has:colon', false], ['x'.repeat(17), false], ['玩家123_', true]]
+  const names = [['ab', true], ['a', false], ['sd_dt', true], ['叁柒轻亲', true], ['has space', false], ['has:colon', false], ['x'.repeat(17), false], ['玩家123_', true]]
   for (const [n, want] of names) {
     const got = module.exports.NAME_RE.test(n)
     if (got !== want) { fail++; console.log('  ✗ 用户名 ' + JSON.stringify(n) + ' 期望 ' + want + ' 得到 ' + got) } else { console.log('  ✓ 用户名 ' + JSON.stringify(n) + ' = ' + got) }

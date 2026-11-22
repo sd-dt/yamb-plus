@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 每小时时报 v3 —— 双号版 + yamb 状态行
+// 每小时时报 v4 —— 单号版（_p68 双号已取消）+ yamb 状态行
 // 设计要点：
 //   1. 机器人离线时【发不出消息】—— "该来的消息没来"本身就是告警
 //   2. 两个号都探测；只要有一个在线就照常发时报（优先用 A 发，A 挂了用 B 发）
@@ -9,13 +9,13 @@ const fs = require('fs')
 const { execSync } = require('child_process')
 
 const NL = String.fromCharCode(10)
-const { env, envAbs, repoPath } = require('../lib/env')
-const fleetMod = require('../lib/fleet')
-const TOKEN = env.require('NAPCAT_TOKEN')
-const ACCOUNTS = fleetMod.NAPCAT.map((n) => ({ key: n.key, name: n.name, port: n.port, container: n.container }))
-const NOTIFY_USER = fleetMod.NOTIFY_USER
-const NOTIFY_GROUP = fleetMod.NOTIFY_GROUP
-const STATE = envAbs('STATE_FILE', repoPath('data', 'state.json'))
+const TOKEN = process.env.ONEBOT_TOKEN || 'change-me'
+const ACCOUNTS = [
+  { key: 'A', name: '地图bot2.0',  port: 3000 }
+]
+const NOTIFY_USER = Number(process.env.NOTIFY_USER || 0)
+const NOTIFY_GROUP = Number(process.env.NOTIFY_GROUP || 0)
+const STATE = '/opt/qqbot/state.json'
 
 const ts = () => new Date().toLocaleString('zh-CN', { hour12: false })
 const log = (...a) => console.log('[' + ts() + ']', ...a)
@@ -78,8 +78,8 @@ function yambStatus () {
   if (running) {
     let who = ''
     try {
+      const dir = '/opt/qqbot/yamb/config/bots'
       const path = require('path')
-      const dir = path.join(envAbs('YAMB_DIR', repoPath('yamb')), 'config', 'bots')
       const on = fs.readdirSync(dir)
         .filter((f) => /\.ya?ml$/.test(f))
         .filter((f) => /^enabled:\s*true/m.test(fs.readFileSync(path.join(dir, f), 'utf8')))
@@ -129,9 +129,9 @@ function yambStatus () {
   const timeStr = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':00'
 
   if (up.length === 0) {
-    log('!! 两个号都不在线，跳过时报（消息没来 = 告警）')
+    log('!! 号不在线，跳过时报（消息没来 = 告警）')
     st.heartbeatMiss = (st.heartbeatMiss || 0) + 1
-    st.lastHeartbeat = timeStr + ' (双号离线未发)'
+    st.lastHeartbeat = timeStr + ' (离线未发)'
     try { fs.writeFileSync(STATE, JSON.stringify(st, null, 2)) } catch (e) {}
     process.exit(1)
   }
@@ -139,12 +139,10 @@ function yambStatus () {
   const avail = memMB()
   const text = [
     'QQBot 时报 ' + timeStr,
-    ACCOUNTS[0].key + '(' + ACCOUNTS[0].name + ')：' + (probes[0] && probes[0].online ? '在线' : '离线'),
-    ACCOUNTS[1].key + '(' + ACCOUNTS[1].name + ')：' + (probes[1] && probes[1].online ? '在线' : '离线') + (probes[1] && probes[1].online ? '' : '  <- 备用号离线，建议抽空重扫'),
-    '备用号发送自检：' + (st.spareSendOk === undefined ? '未做过' : (st.spareSendOk ? '正常 ' + (st.spareSendAt || '') : '异常! ' + (st.spareSendNote || ''))),
+    'A(地图bot2.0)：' + (probes[0].online ? '在线' : '离线'),
     'yamb 挂机：' + yambStatus(),
     '可用内存：' + avail + ' MB',
-    'NapCat 容器：' + containerLine((ACCOUNTS[0] && ACCOUNTS[0].container) || 'napcat'),
+    'SnowLuma 容器：' + containerLine('snowluma'),
     'AstrBot 容器：' + containerLine('astrbot'),
     // _p62: 近 24h 内没有自救重启则隐藏该行，避免长期挂着历史记录
     ...((st.lastRestartAt && (Date.now() - Number(st.lastRestartAt) < 24 * 3600 * 1000))

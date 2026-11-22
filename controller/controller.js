@@ -37,23 +37,21 @@ const http = require('http')
 const net = require('net')
 const fs = require('fs')
 const path = require('path')
-const { execFileSync, execFile } = require('child_process')
+const { execFileSync, execFile, spawn } = require('child_process')
 const { captureReply, logSizeNow, captureOutgoing, outSizeNow } = require('./reply-capture')
-const { env, envAbs, repoPath } = require('../lib/env')
-const fleet = require('../lib/fleet')
 
-const PORT = env.int('CTRL_PORT', 15100)
-const API_KEY = env.require('CTRL_KEY')
-const YAMB = envAbs('YAMB_DIR', repoPath('yamb'))
+const PORT = 15100
+const API_KEY = process.env.MCBOT_CTRL_KEY || 'change-me'
+const YAMB = '/opt/qqbot/yamb'
 const BOTS = path.join(YAMB, 'config', 'bots')
-const SWITCH = path.join(__dirname, 'switch.sh')
-const YAMB_API_KEY = env.require('YAMB_API_KEY')
-const NAPCAT_TOKEN = env.require('NAPCAT_TOKEN')
-const ACCOUNTS = fleet.ACCOUNTS
-const PORTS = fleet.PORTS
+const SWITCH = '/opt/qqbot/mcbot/switch.sh'
+const YAMB_API_KEY = process.env.YAMB_API_KEY || 'change-me'
+const NAPCAT_TOKEN = process.env.ONEBOT_TOKEN || 'change-me'
+const ACCOUNTS = ['sd_dt', '___Fr0g___', '___donk666___', 'Nekoade_MAP']
+const PORTS = { sd_dt: 15101, '___Fr0g___': 15102, '___donk666___': 15103, Nekoade_MAP: 15104 }
 const ACC_SET = new Set(ACCOUNTS)
 // 账号数字别名（顺序由用户指定，注意和 ACCOUNTS 不同）
-const ACC_NUM = fleet.ACC_NUM
+const ACC_NUM = { '1': 'sd_dt', '2': '___donk666___', '3': '___Fr0g___', '4': 'Nekoade_MAP' }
 const NUM_OF = {}
 for (const k of Object.keys(ACC_NUM)) NUM_OF[ACC_NUM[k]] = k
 // 把 '1'~'4' 或完整账号名归一化成账号名；认不出返回 ''
@@ -68,7 +66,7 @@ const GAME_CMD_COOLDOWN_MS = 5000
 let lastGameCmdAt = 0
 
 // ── 循环指令（loop）相关常量 ─────────────────────────────
-const LOOP_FILE = path.join(__dirname, 'loops.json')
+const LOOP_FILE = '/opt/qqbot/mcbot/loops.json'
 const TICK_MS = 50                 // Minecraft 1 tick = 50ms（20 TPS）
 const LOOP_MIN_TICKS = 20          // 最小 1 秒：再短就是刷屏，会被服务器禁言/封号
 const LOOP_MAX_TICKS = 72000       // 最大 1 小时
@@ -77,6 +75,15 @@ const LOOP_TEXT_MAX = 200
 let loops = []
 let loopSeq = 0
 let loopBusy = false
+
+// ── 转钱（pay）相关常量 _p69 ─────────────────────────────
+const PAY_FILE = '/opt/qqbot/astrbot-data/plugins/astrbot_plugin_mcbot/pay.json'
+const PAY_STATE_FILE = '/opt/qqbot/astrbot-data/plugins/astrbot_plugin_mcbot/pay-state.json'
+const PAY_SCRIPT = '/opt/qqbot/mcbot/pay-daily.js'
+const PAY_LOG = '/opt/qqbot/mcbot/pay-run.log'
+const PAY_PORT_BASE = 15105
+const PAY_AUTH_SCRIPT = '/opt/qqbot/mcbot/ms-device-auth.js'   // _p70: 设备码授权脚本
+const PAY_AUTH_DIR = '/opt/qqbot/mcbot/pay-auth'               // _p70: 授权码/完成状态（600）
 
 const ts = () => new Date().toLocaleString('zh-CN', { hour12: false })
 const log = (...a) => console.log('[' + ts() + ']', ...a)
@@ -108,7 +115,7 @@ connect.startRelay(log)
 function yambCall (account, endpoint, body, timeoutMs) {
   const limit = timeoutMs || 12000
   return new Promise((resolve) => {
-    const port = PORTS[account]
+    const port = PORTS[account] || (payRead().ports || {})[account] || 0   // _p69: 转钱小号端口回退
     if (!port) return resolve({ success: false, message: '未知账号端口' })
     const payload = body === undefined ? null : JSON.stringify(body)
     const headers = { 'x-api-key': YAMB_API_KEY }
@@ -173,6 +180,12 @@ function napcatLoginInfo (port, timeoutMs) {
 }
 
 // ── 调用 switch.sh ──────────────────────────────────────
+// 兜底回执：QQ 侧只认 replies，空 replies 表现出来的就是"没反应"
+function receiptHint (text, r) {
+  if (!(r && r.success)) return ''
+  return '（yamb 已注入「' + text + '」，但 20 秒内没有游戏内回执：可能被白名单/锁定/前缀过滤，或 bot 未进服）'
+}
+
 function yambInject (account, sender, text) {
   return yambCall(account, 'command', { command: text, sender: sender })
 }
@@ -420,7 +433,7 @@ function javaIdWarning (n) {
 
 // 写文件前用 yamb 自带的 YAML 解析器验一遍（没有解析器就跳过校验，只记日志）
 function yamlParseCheck (text) {
-  const mods = [path.join(YAMB, 'node_modules', 'yaml'), path.join(YAMB, 'node_modules', 'js-yaml')]
+  const mods = ['/opt/qqbot/yamb/node_modules/yaml', '/opt/qqbot/yamb/node_modules/js-yaml']
   for (const m of mods) {
     let y = null
     try {
@@ -485,7 +498,7 @@ function restartYamb () {
 // 实现：直接对 MC 服务器做一次 Server List Ping（标准协议，零依赖），拿在线玩家名单。
 function readMcTarget () {
   try {
-    const t = fs.readFileSync(path.join(YAMB, '.env'), 'utf8')
+    const t = fs.readFileSync('/opt/qqbot/yamb/.env', 'utf8')
     const h = (t.match(/^MC_HOST=(.+)$/m) || [])[1]
     const p = (t.match(/^MC_PORT=(\d+)/m) || [])[1]
     return h ? { host: h.trim(), port: parseInt(p || '25565', 10) } : null
@@ -736,7 +749,7 @@ async function handleAdminCommand (raw, forcedAcc) {
       const sender = await pickSender(cur)
       const since = outSizeNow()
       const r = await yambInject(cur, sender, '#b add ' + name)
-      const replies = await captureOutgoing(since, { maxLines: 40, timeoutMs: 6000 })
+      const replies = await captureOutgoing(since, { maxLines: 40, timeoutMs: 20000 })
       hot = { ok: !!(r && r.success), replies: replies || [] }
       log('热加载白名单 [' + cur + ']: #b add ' + name + ' -> ' + (hot.ok ? 'ok' : 'failed'))
     } catch (e) {
@@ -800,7 +813,9 @@ async function handleStatus () {
     let ingame = null
     if (on) {
       const r = await yambCall(a, 'status', undefined, 5000)
-      if (r && r.success) ingame = r
+      // 【pkg99】yamb 的 getStatus() 里 success 恒为 true（它只表示“命令跑通了”），
+      // 真正的“是否在游戏里”要看 minecraft 字段；否则没进服也会显示“已进服”。
+      if (r && r.success && r.minecraft === true) ingame = r
     }
     list.push({ name: a, num: NUM_OF[a] || '', enabled: on, ingame: ingame })
   }
@@ -828,13 +843,16 @@ async function route (req, res) {
   }
 
   if (req.method === 'GET' && url === '/primary') {
-    const primaryAcc = fleet.NAPCAT[0] || {}
-    const online = await napcatLoginInfo(primaryAcc.port || 3000, 5000)
-    return send(res, 200, { ok: true, primary: primaryAcc.uin || '', online: online })
+    const online = await napcatLoginInfo(3000, 5000)
+    return send(res, 200, { ok: true, primary: '3764332026', online: online })
   }
 
   if (req.method === 'GET' && url === '/status') {
     return send(res, 200, await handleStatus())
+  }
+
+  if (req.method === 'GET' && url === '/pay-list') {
+    return send(res, 200, await payList())   // _p69b: GET 放行（要在 405 拦截之前）
   }
 
   if (req.method !== 'POST') {
@@ -852,8 +870,8 @@ async function route (req, res) {
     const delay = Math.max(0, Math.min(120, parseInt(body.delay, 10) || 3)) * 1000
     log('收到请求：' + (delay / 1000) + ' 秒后重启 AstrBot')
     setTimeout(() => {
-      execFile('docker', ['compose', 'restart', 'astrbot'],
-        { cwd: envAbs('NAPCAT_COMPOSE_DIR', repoPath('deploy', 'compose')), timeout: 180000 },
+      execFile('docker', ['restart', 'astrbot'],
+        { timeout: 180000 },
         (err, so, se) => {
           log('重启 AstrBot ' + (err ? ('失败: ' + String(se || err.message).slice(0, 200)) : '完成'))
         })
@@ -873,9 +891,17 @@ async function route (req, res) {
     return connect.handleSay(res, body, send, log, { accounts: ACCOUNTS, yambSay: yambSay })
   }
 
+  // ── 转钱（_p69）────────────────────────────────────────
+  if (url === '/pay-add') return send(res, 200, await payAdd(body))
+  if (url === '/pay-del') return send(res, 200, await payDel(body))
+  if (url === '/pay-list') return send(res, 200, await payList())
+  if (url === '/pay-run') return send(res, 200, payRun(body))
+  if (url === '/pay-auth') return send(res, 200, await payAuth(body))   // _p70
+
+
   if (url === '/switch') {
     // 新用法：{ mode: 'set'|'toggle'|'enable'|'disable', accounts: [...] }
-    // 老用法：{ account: 'bot1' }  ==  set bot1
+    // 老用法：{ account: 'sd_dt' }  ==  set sd_dt
     const list = Array.isArray(body.accounts)
       ? body.accounts.map((x) => accOf(x) || String(x).trim()).filter(Boolean)
       : []
@@ -933,7 +959,7 @@ async function route (req, res) {
         : { ok: false, message: r.message })
     }
 
-    const enabledNow = enabledAccounts()
+    const enabledNow = enabledAccounts().concat(payEnabledAccounts())   // _p69: 含转钱小号
     const wantAcc = accOf(body.account)
     let acc = enabledNow[0] || ''
     if (wantAcc) {
@@ -952,7 +978,8 @@ async function route (req, res) {
     log('游戏内指令 [' + acc + ']: ' + text)
     const since = logSizeNow()
     const r = await yambSay(acc, text)
-    const replies = await captureReply(since, text, { botName: acc, maxLines: 40, timeoutMs: 6000 })
+    const replies = (await captureReply(since, text, { botName: acc, maxLines: 40, timeoutMs: 20000 })) || []
+    if (!replies.length) { const hint = receiptHint(text, r); if (hint) replies.push(hint) }
     return send(res, 200, {
       ok: !!(r && r.success),
       message: (r && r.message) || '无响应',
@@ -995,12 +1022,21 @@ async function route (req, res) {
       return send(res, 429, { ok: false, message: '操作太频繁，请稍等几秒' })
     }
     lastGameCmdAt = nowCmd
+    const helpCmd = String(raw || '').trim().toLowerCase()
+    if (helpCmd === 'help' || helpCmd === '帮助') {
+      const helpLines = yambHelpLines(acc)
+      if (helpLines.length) {
+        log('yamb help（本地读取）[' + acc + ']: ' + helpLines.length + ' 行')
+        return send(res, 200, { ok: true, message: '已读取 ' + acc + ' 的指令列表', sent: 'help', replies: helpLines })
+      }
+    }
     const text = '#b ' + raw.replace(/^#b\s+/i, '')
     const sender = await pickSender(acc)
     log('yamb 指令 [' + acc + ']: ' + text)
     const since = outSizeNow()
     const r = await yambInject(acc, sender, text)
-    const replies = await captureOutgoing(since, { maxLines: 40, timeoutMs: 6000 })
+    const replies = (await captureOutgoing(since, { maxLines: 40, timeoutMs: 20000 })) || []
+    if (!replies.length) { const hint = receiptHint(text, r); if (hint) replies.push(hint) }
     return send(res, 200, {
       ok: !!(r && r.success),
       message: (r && r.message) || '无响应',
@@ -1012,12 +1048,346 @@ async function route (req, res) {
   return send(res, 404, { ok: false, message: 'not found' })
 }
 
+function yambHelpLines (acc) {
+  // 直接读 yamb 的 bot 配置，返回 helpLines（避免游戏内抓包被限流/超时截断）
+  const p = '/opt/qqbot/yamb/config/bots/' + acc + '.yaml'
+  let text = ''
+  try { text = fs.readFileSync(p, 'utf8') } catch (e) { return [] }
+  const out = []
+  let inBlock = false
+  for (const line of text.split(/\r?\n/)) {
+    if (/^helpLines:\s*$/.test(line)) { inBlock = true; continue }
+    if (!inBlock) continue
+    const m = line.match(/^\s+-\s+(.*)$/)
+    if (m) { out.push(m[1].trim()); continue }
+    if (/^\S/.test(line)) break
+  }
+  return out
+}
+
 function requestHandler (req, res) {
   route(req, res).catch((e) => {
     const msg = e && e.message ? e.message : String(e)
     log('处理异常: ' + msg)
     try { send(res, 500, { ok: false, message: msg }) } catch (x) { /* 已发送 */ }
   })
+}
+
+
+// ── 转钱（pay）_p69 ──────────────────────────────────────
+function payRead () {
+  try {
+    return JSON.parse(fs.readFileSync(PAY_FILE, 'utf8'))
+  } catch (e) {
+    return { pay_to: '', pay_amount: '', command: '/pay {to} {amount}', notify_user: '', accounts: [], ports: {} }
+  }
+}
+
+function payWrite (cfg) {
+  fs.writeFileSync(PAY_FILE, JSON.stringify(cfg, null, 2) + '\n')
+}
+
+function payStateRead () {
+  try {
+    return JSON.parse(fs.readFileSync(PAY_STATE_FILE, 'utf8'))
+  } catch (e) {
+    return { date: '', tries: {}, done: [] }
+  }
+}
+
+function payToday () {
+  const d = new Date()
+  const p = (n) => String(n).padStart(2, '0')
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+}
+
+function payAccounts () {
+  const cfg = payRead()
+  const list = Array.isArray(cfg.accounts) ? cfg.accounts : []
+  return list.filter((a) => a && !/\s|[\/\\]/.test(a))
+}
+
+function payEnabledAccounts () {
+  const out = []
+  for (const a of payAccounts()) {
+    try {
+      const m = fs.readFileSync(path.join(BOTS, a + '.yaml'), 'utf8').match(/^enabled:\s*(\S+)/m)
+      if (m && m[1] === 'true') out.push(a)
+    } catch (e) { /* 文件不存在就跳过 */ }
+  }
+  return out
+}
+
+function payNextPort (cfg) {
+  const used = Object.values(PORTS).concat(Object.values(cfg.ports || {}))
+  for (let p = PAY_PORT_BASE; p < PAY_PORT_BASE + 60; p++) {
+    if (used.indexOf(p) < 0) return p
+  }
+  return 0
+}
+
+function payYamlText (account, port, password) {
+  const pw = String(password).replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+  return [
+    'id: ' + account,
+    'enabled: false',
+    '',
+    'account:',
+    '  username: ' + account,
+    '  password: "' + pw + '"',
+    '  auth: microsoft',
+    '',
+    'adminList:',
+    ...ACCOUNTS.map((a) => '  - ' + a),
+    '',
+    'astrbot:',
+    '  enabled: true',
+    '  port: ' + port,
+    '',
+    'command:',
+    '  prefix: "#b"',
+    '  allowPublicCommands: true',
+    '  replyAlwaysWhisper: true',
+    '',
+    'helpLines:',
+    '  - "=== 转钱小号 ==="',
+    '  - "本号为自动转钱小号（每天 04:00 上号转钱，平时不在线）"',
+    '  - "help — 显示这份帮助"',
+    '',
+    'teleport:',
+    '  databaseFile: ./data/' + account + '.db',
+    '',
+    'viewer:',
+    '  enabled: false',
+    '',
+    'bot:',
+    '  idleTimeoutMs: 86400000',
+    ''
+  ].join('\n')
+}
+
+async function payAdd (body) {
+  const account = String(body.account || '').trim()
+  // _p70: 设备码授权流，不再经 QQ 收密码
+  if (!account) return { ok: false, message: '缺少 account' }
+  if (/\s|[\/\\]/.test(account) || account.length > 64) {
+    return { ok: false, message: '账号名不合法（不能含空白或斜杠，长度 ≤ 64）' }
+  }
+  // _p71: 先查名单（重新授权走 !mcbot payauth，不用 delpay+addpay）
+  const cfg0 = payRead()
+  if ((Array.isArray(cfg0.accounts) ? cfg0.accounts : []).indexOf(account) >= 0) {
+    return { ok: false, message: '该账号已在转钱名单里（重新授权用 !mcbot payauth ' + account + '，不必重新登记）' }
+  }
+  const yml = path.join(BOTS, account + '.yaml')
+  // _p71: 名单外残留的 yaml（老版 delpay 遗留等）直接改名备份后覆盖重建
+  if (fs.existsSync(yml)) {
+    const bak = yml + '.removed-' + new Date().toISOString().slice(0, 10).replace(/-/g, '')
+    fs.renameSync(yml, bak)
+    log('发现名单外残留配置，已备份覆盖: ' + bak)
+  }
+  const cfg = payRead()
+  cfg.accounts = Array.isArray(cfg.accounts) ? cfg.accounts : []
+  cfg.ports = cfg.ports || {}
+  cfg.paySwitch = cfg.paySwitch || {}           // _p73: 新号默认参与转钱
+  cfg.paySwitch[account] = true
+  const port = payNextPort(cfg)
+  if (!port) return { ok: false, message: '没有空闲端口可分配（15105~15164）' }
+  const ytext = payYamlText(account, port, '')   // _p70: 密码恒为空，登录态走本地 token 缓存
+  const check = yamlParseCheck(ytext)
+  if (check.ok === false) return { ok: false, message: '生成的 YAML 校验失败：' + check.message }
+  cfg.accounts.push(account)
+  cfg.ports[account] = port
+  try {
+    payWrite(cfg)
+    fs.writeFileSync(yml, ytext)   // _p69c: 先记账再写配置；写配置失败则回滚名单
+  } catch (e) {
+    cfg.accounts.splice(cfg.accounts.indexOf(account), 1)
+    delete cfg.ports[account]
+    payWrite(cfg)
+    return { ok: false, message: "写入失败：" + e.message }
+  }
+  log('转钱小号已登记: ' + account + '（端口 ' + port + '）')
+  let extra = ''
+  if (yambAlive() && enabledAccounts().length > 0) {
+    const ry = await restartYamb()
+    extra = '已重启 yamb 让新号生效（在线的号会掉线约 40 秒自动回来）' +
+      (ry && ry.ok ? '' : '\n⚠️ yamb 重启失败：' + ((ry && ry.message) || '未知'))
+  } else {
+    // _p69d: yamb 上游在 0 个启用号时启动即退出，此时不硬重启；
+    // paytest / 04:00 定时任务的 startInstance 会按需拉起 yamb（小号 enabled:true 撑起启动条件）
+    extra = 'yamb 当前未运行或没有启用的挂机号，暂不重启；新号会在下次 yamb 启动时自动生效' +
+      '（每天 04:00 自动登录会带上它）'
+  }
+  // _p70: 登记完当场发微软设备授权码（免密码）
+  const auth = await payStartAuth(account)
+  if (auth.ok) {
+    extra += '\n\n🔗 ' + auth.verification_uri + '\n🔑 授权码：' + auth.user_code +
+      '\n请在浏览器打开网址，用「' + account + '」的微软账号登录并输入授权码（15 分钟内有效）。' +
+      '\n全程无需把密码发给机器人：授权完成后 token 只保存在服务器本地缓存，完成时我会私聊通知你。'
+  } else {
+    extra += '\n\n⚠️ 设备授权码没能发出：' + auth.message
+  }
+  return {
+    ok: true,
+    message: '✅ 已登记转钱小号 ' + account + '（端口 ' + port + '）\n' + extra +
+      '\n\n授权完成后可用 !mcbot paytest ' + account + ' 当场试转一次\n' +
+      '每天 04:00 自动登录转钱；收款人/金额记得用 !mcbot payset 设置'
+  }
+}
+
+// _p71: 尽力而为地停掉某个小号的 yamb 实例（走控制口）
+function yambCtrlStop (account) {
+  return new Promise((resolve) => {
+    const payload = JSON.stringify({ account: account })
+    const req = http.request({
+      host: '127.0.0.1', port: 15199, path: '/api/instances/stop', method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload), 'x-api-key': YAMB_API_KEY },
+      timeout: 30000
+    }, (res) => {
+      let d = ''
+      res.on('data', (c) => { d += c })
+      res.on('end', () => { log('停实例 ' + account + ': ' + d.slice(0, 100)); resolve(true) })
+    })
+    req.on('error', () => resolve(false))
+    req.on('timeout', () => { req.destroy(); resolve(false) })
+    req.write(payload)
+    req.end()
+  })
+}
+
+async function payDel (body) {
+  const account = String(body.account || '').trim()
+  if (!account) return { ok: false, message: '缺少 account' }
+  const cfg = payRead()
+  cfg.accounts = Array.isArray(cfg.accounts) ? cfg.accounts : []
+  const i = cfg.accounts.indexOf(account)
+  if (i < 0) return { ok: false, message: '转钱名单里没有：' + account }
+  cfg.accounts.splice(i, 1)
+  if (cfg.ports) delete cfg.ports[account]
+  if (cfg.paySwitch) delete cfg.paySwitch[account]   // _p73
+  payWrite(cfg)
+  // _p71: 彻底移除——先尽量停掉在跑的实例，yaml 改名备份（不再是"保留停用"，避免挡住重新 addpay）
+  let note = ''
+  const stopped = await yambCtrlStop(account)
+  if (stopped) note = '\n该号实例已下线'
+  try {
+    const yml = path.join(BOTS, account + '.yaml')
+    const bak = yml + '.removed-' + new Date().toISOString().slice(0, 10).replace(/-/g, '')
+    fs.renameSync(yml, bak)
+    note += '\nyaml 已移除（备份：' + bak + '）'
+  } catch (e) { /* 文件不存在就算了 */ }
+  log('转钱小号已移除: ' + account)
+  return { ok: true, message: '✅ 已彻底移除 ' + account + note }
+}
+
+function payList () {
+  const cfg = payRead()
+  const st = payStateRead()
+  const sameDay = st.date === payToday()
+  const lines = ['💰 转钱配置（每天 04:00 自动执行，失败自动排队重试，每个号每天最多 4 次）']
+  lines.push('收款人：' + (cfg.pay_to || '（未设置）'))
+  lines.push('金额：' + (cfg.pay_amount || '（未设置）'))
+  if (!cfg.pay_to || !cfg.pay_amount) lines.push('⚠️ 还没设置：!mcbot payset <收款人> <金额>')
+  const accs = payAccounts()
+  if (!accs.length) lines.push('小号：（无）— 用 !mcbot addpay <账号> 登记')
+  const sw = cfg.paySwitch || {}
+  for (const a of accs) {
+    const off = sw[a] === false   // _p73: 单号开关，缺省=开
+    const t = sameDay ? (st.tries[a] || 0) : 0
+    const done = sameDay && Array.isArray(st.done) && st.done.indexOf(a) >= 0
+    lines.push('◆ ' + a + '（端口 ' + ((cfg.ports || {})[a] || '?') + '）' +
+      (off ? '  ⏸ 已暂停（!mcbot payon ' + a + ' 恢复）' : '') +
+      (done ? '  ✅ 今日已转' : (t ? '  今日已试 ' + t + '/4' : '')))
+  }
+  return Promise.resolve({ ok: true, message: lines.join('\n') })
+}
+
+function payRun (body) {
+  const account = String(body.account || '').trim()
+  const accs = payAccounts()
+  if (account && accs.indexOf(account) < 0) {
+    return Promise.resolve({ ok: false, message: '未知转钱账号：' + account + '（用 !mcbot paylist 查看名单）' })
+  }
+  let pid = ''
+  try {
+    const out = fs.openSync(PAY_LOG, 'a')
+    const child = spawn(process.execPath, [PAY_SCRIPT].concat(account ? ['--account', account] : []),
+      { detached: true, stdio: ['ignore', out, out], cwd: '/opt/qqbot/mcbot' })
+    child.unref()
+    fs.closeSync(out)
+    pid = child.pid
+  } catch (e) {
+    return Promise.resolve({ ok: false, message: '启动失败：' + e.message })
+  }
+  log('触发转钱' + (account ? ' [' + account + ']' : '（全部）') + ' -> pid ' + pid)
+  return Promise.resolve({
+    ok: true,
+    message: '✅ 已开始执行转钱' + (account ? '（账号 ' + account + '）' : '（全部小号）') +
+      '\n流程：临时下线挂机号 → 登录小号 → 等进服 → 转钱 → 下线小号 → 恢复挂机号\n' +
+      '失败会自动排队重试（每个号每天最多 4 次），结果会私聊通知\n' +
+      '日志：/opt/qqbot/mcbot/pay-run.log'
+  })
+}
+
+
+// ── 设备码授权（_p70）────────────────────────────────────
+// 拉起 ms-device-auth.js（与 yamb 登录同构：同缓存目录/同 flow），等授权码出现后返回给 QQ。
+// token 只落在本地缓存文件；code/done 状态文件不含 token。
+async function payStartAuth (account) {
+  const codeFile = path.join(PAY_AUTH_DIR, account + '.code.json')
+  const doneFile = path.join(PAY_AUTH_DIR, account + '.done.json')
+  try { fs.unlinkSync(codeFile) } catch (e) {}
+  try { fs.unlinkSync(doneFile) } catch (e) {}
+  try { fs.mkdirSync(PAY_AUTH_DIR, { recursive: true, mode: 0o700 }) } catch (e) {}
+  const out = fs.openSync(PAY_LOG, 'a')
+  const child = spawn(process.execPath, [PAY_AUTH_SCRIPT, account],
+    { detached: true, stdio: ['ignore', out, out], env: Object.assign({}, process.env, { PAY_NAPCAT_TOKEN: NAPCAT_TOKEN }) })
+  child.unref()
+  fs.closeSync(out)
+  log('设备码授权已发起: ' + account + ' -> pid ' + child.pid)
+  for (let i = 0; i < 16; i++) {   // 最多等 ~8 秒
+    await new Promise((r) => setTimeout(r, 500))
+    try {
+      const c = JSON.parse(fs.readFileSync(codeFile, 'utf8'))
+      if (c && c.user_code) {
+        return { ok: true, verification_uri: c.verification_uri || 'https://www.microsoft.com/link', user_code: c.user_code }
+      }
+    } catch (e) { /* 还没就绪 */ }
+    try {
+      const d = JSON.parse(fs.readFileSync(doneFile, 'utf8'))
+      if (d && d.ok) {
+        // 缓存里已有有效 token，本次无需授权
+        return { ok: true, verification_uri: '（该账号缓存里已有有效登录态，无需授权）', user_code: '无需授权码' }
+      }
+    } catch (e) {}
+  }
+  return { ok: false, message: '8 秒内没等到授权码（详情见 pay-run.log）；稍后可用 !mcbot payauth ' + account + ' 重试' }
+}
+
+async function payAuth (body) {
+  const account = String(body.account || '').trim()
+  if (payAccounts().indexOf(account) < 0) {
+    return { ok: false, message: '未知转钱账号：' + account + '（用 !mcbot paylist 查看名单）' }
+  }
+  const auth = await payStartAuth(account)
+  if (!auth.ok) return { ok: false, message: '设备授权码没能发出：' + auth.message }
+  return {
+    ok: true,
+    message: '🔑 「' + account + '」微软设备授权码已发出\n' +
+      '🔗 ' + auth.verification_uri + '\n' +
+      '🔑 授权码：' + auth.user_code + '\n' +
+      '请在浏览器打开上面的网址，用该小号的微软账号登录并输入授权码（15 分钟内有效）。\n' +
+      '授权完成后 token 只保存在服务器本地，我会私聊通知你。'
+  }
+}
+
+// _p69d: yamb 进程是否在跑
+function yambAlive () {
+  try {
+    const out = execFileSync('pgrep', ['-f', 'yamb/dist/index.js'],
+      { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
+    return out !== ''
+  } catch (e) { return false }
 }
 
 // ── 绑定地址：127.0.0.1 + Docker 网桥网关 ────────────────

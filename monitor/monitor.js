@@ -3,8 +3,8 @@
  *
  * 相比 v3 的变化：
  *   1. 同时探测【两个 QQ 号】：
- *        A = 主号（fleet.json napcat[0]）  本地 API 127.0.0.1:3000
- *        B = 备用号（fleet.json napcat[1]）本地 API 127.0.0.1:3001
+ *        A = 3922927026  容器 napcat    本地 API 127.0.0.1:3000
+ *        B = 3764332026  容器 napcat-b  本地 API 127.0.0.1:3001
  *   2. 告警策略（用户定稿）：只要还有一个号在线，就【完全安静】；
  *      两个号都挂了才发邮件告警。
  *   3. 两个号都掉线时，二维码邮件里会【同时带上两个号的二维码】，
@@ -13,8 +13,8 @@
  *      且只重启真正不可达的那个容器（重启会掉登录，代价大）。
  *   5. 每个号单独记录掉线起点/原因，state.json 里新增 accStatus 供日报读取。
  *
- * 自测： node monitor/monitor.js --test-qr    只发一封二维码邮件，不改状态
- *      node monitor/monitor.js --probe      只打印两号状态，不发任何通知
+ * 自测： node /opt/qqbot/monitor.js --test-qr    只发一封二维码邮件，不改状态
+ *      node /opt/qqbot/monitor.js --probe      只打印两号状态，不发任何通知
  */
 const fs = require('fs')
 const { execSync } = require('child_process')
@@ -23,23 +23,24 @@ const NL = String.fromCharCode(10)
 
 let sendMail = async () => ({ ok: false, reason: 'mailer 未加载' })
 try {
-  sendMail = require('./mailer').sendMail
+  sendMail = require('/opt/qqbot/mailer').sendMail
 } catch (e) {
   console.log('[monitor] 警告：mailer.js 未加载，本次只走 QQ 通知 ——', e.message)
 }
 
-const { env, envAbs, repoPath } = require('../lib/env')
-const fleetMod = require('../lib/fleet')
-const STATE_PATH = envAbs('STATE_FILE', repoPath('data', 'state.json'))
-const TOKEN = env.require('NAPCAT_TOKEN')
-const ACCOUNTS = fleetMod.NAPCAT
+const STATE_PATH = '/opt/qqbot/state.json'
+const TOKEN = process.env.ONEBOT_TOKEN || 'change-me'
+const ACCOUNTS = [
+  { key: 'A', name: '地图bot2.0',  uin: '3764332026', container: 'snowluma', port: 3000, qrScript: '/opt/qqbot/qr_snowluma.sh' }
+]
+// _p68: 双号已取消，只保留主号 A（napcat-b 容器已移除；4.5 备用号自检块因守卫自动跳过）
 const RESTART_COOLDOWN_MS = 20 * 60 * 1000
 const ALERT_COOLDOWN_MS = 30 * 60 * 1000
 const QR_ALERT_INTERVAL_MS = 10 * 60 * 1000
 const MEM_ALERT_MB = 150
 const FAIL_THRESHOLD = 2
-const NOTIFY_USER = fleetMod.NOTIFY_USER
-const NOTIFY_GROUP = fleetMod.NOTIFY_GROUP
+const NOTIFY_USER = Number(process.env.NOTIFY_USER || 0)
+const NOTIFY_GROUP = Number(process.env.NOTIFY_GROUP || 0)
 
 const ts = () => new Date().toLocaleString('zh-CN', { hour12: false })
 const log = (...a) => console.log('[' + ts() + ']', ...a)
@@ -133,13 +134,28 @@ function latestQrInfo (container) {
   return info
 }
 
-/** 从容器里取出二维码图片（已登录时 NapCat 不生成，取不到是正常的） */
+/** 从容器里取出二维码图片（SnowLuma 没有二维码文件，直接截屏裁切登录窗口） */
 function fetchQrImage (container, tag) {
-  const dest = '/tmp/napcat-qrcode-' + tag + '-' + Date.now() + '.png'
+  const dest = '/tmp/qq-qrcode-' + tag + '-' + Date.now() + '.png'
   try {
-    execSync('docker cp ' + container + ':/app/napcat/cache/qrcode.png ' + dest, {
-      stdio: ['ignore', 'ignore', 'ignore']
-    })
+    if (container === 'snowluma') {
+      const full = '/tmp/snowluma-full.png'
+      execSync('docker exec -e DISPLAY=:1 snowluma ffmpeg -y -loglevel error -f x11grab -video_size 1920x1080 -i :1 -frames:v 1 ' + full, {
+        stdio: ['ignore', 'ignore', 'ignore']
+      })
+      try {
+        execSync('docker exec snowluma ffmpeg -y -loglevel error -i ' + full + ' -vf crop=360:360:800:390 /tmp/snowluma-qr.png', {
+          stdio: ['ignore', 'ignore', 'ignore']
+        })
+        execSync('docker cp snowluma:/tmp/snowluma-qr.png ' + dest, { stdio: ['ignore', 'ignore', 'ignore'] })
+      } catch (e) {
+        execSync('docker cp snowluma:' + full + ' ' + dest, { stdio: ['ignore', 'ignore', 'ignore'] })
+      }
+    } else {
+      execSync('docker cp ' + container + ':/app/napcat/cache/qrcode.png ' + dest, {
+        stdio: ['ignore', 'ignore', 'ignore']
+      })
+    }
     if (fs.existsSync(dest) && fs.statSync(dest).size > 0) return dest
     return ''
   } catch (e) {
@@ -235,8 +251,8 @@ async function sendQrAlert (probes, opts) {
 
   lines.push('========================')
   lines.push('本机自查命令（在服务器上执行）：')
-  lines.push('  bash ' + repoPath('monitor', 'status.sh'))
-  for (const a of ACCOUNTS) lines.push('  docker logs --tail 60 ' + a.container)
+  lines.push('  bash /opt/qqbot/status.sh')
+  lines.push('  docker logs --tail 60 snowluma')
   lines.push('')
   lines.push('时间：' + ts())
 
@@ -347,15 +363,15 @@ async function sendQrAlert (probes, opts) {
         '因为在线的号已经没有了，系统会尝试重启上述容器。' + NL +
         '注意：重启会导致 QQ 掉登录、需要重新扫码，二维码会在下一封邮件里发给你。' + NL +
         '若长时间不恢复，请在服务器上执行：' + NL +
-        '  bash ' + repoPath('monitor', 'status.sh') + NL +
-        ACCOUNTS.map((a) => '  docker logs --tail 60 ' + a.container).join(NL))
+        '  bash /opt/qqbot/status.sh' + NL +
+        '  docker logs --tail 60 snowluma')
 
       const now = Date.now()
       if (now - s.lastRestartAt > RESTART_COOLDOWN_MS) {
         const svc = deadKeys.map((k) => ACCOUNTS.filter((a) => a.key === k)[0].container).join(' ')
         log('!! 执行自动重启：' + svc)
         try {
-          execSync('cd ' + envAbs('NAPCAT_COMPOSE_DIR', repoPath('deploy', 'compose')) + ' && docker compose restart ' + svc, { stdio: 'inherit' })
+          execSync('docker restart ' + svc, { stdio: 'inherit' })
           s.napcatRestarts++
           s.lastRestartAt = now
           s.lastNote = '不可达自动重启(' + svc + ') @ ' + ts()
@@ -431,7 +447,7 @@ async function sendQrAlert (probes, opts) {
             '备用号 ' + spareAcc.name + '(' + spareAcc.uin + ') 显示在线，但实际发送被拒绝：' + NL +
             s.spareSendNote + NL + NL +
             '含义：主号一旦掉线，备用号接管后【同样发不出消息】，双号热备等于失效。' + NL +
-            '处理办法（详见 docs/troubleshooting.md 第 3 节）：' + NL +
+            '处理办法（实测有效，详见 /opt/qqbot/README.md 第 6.3 节）：' + NL +
             '  1. 手机登录该号，手动发一条消息，确认账号本身没被风控' + NL +
             '  2. 让 NapCat 重新运行：POST http://127.0.0.1:' + spareAcc.port + '/set_restart' + NL +
             '  3. 如果出现二维码，扫码重登：bash ' + spareAcc.qrScript + NL +

@@ -1,5 +1,5 @@
 #!/bin/bash
-# yamb 账号控制器 v4 —— 支持多号（上限 2）+ 保活（ensure）
+# yamb 账号控制器 v4 —— 支持多号（上限 3）+ 保活（ensure）
 #
 #   switch.sh status                查看所有账号：启用标记 + 游戏内状态
 #   switch.sh start                 启动 yamb（用当前启用标记；没有标记会提示）
@@ -15,15 +15,14 @@
 #   switch.sh toggle  <账号...>     逐个翻转
 #   switch.sh <账号名>              等价于 toggle <账号名>（翻转）
 set -u
-. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/env.sh"
 
-YAMB=$YAMB_DIR
+YAMB=/opt/qqbot/yamb
 BOTS="$YAMB/config/bots"
 UNIT=yamb.service
-API_KEY=${YAMB_API_KEY:?缺少 YAMB_API_KEY（复制 .env.example 为 .env 并填写）}
+API_KEY=${YAMB_API_KEY:-change-me}
 CTRL_PORT=${YAMB_CONTROL_PORT:-15199}   # _p66: yamb 热上下号控制口
-ACCOUNTS=$(fleet_json "f.accounts.map(a=>a.name).join(' ')")
-MAX_ONLINE=2
+ACCOUNTS="sd_dt ___Fr0g___ ___donk666___ Nekoade_MAP Crumpledt_"
+MAX_ONLINE=4
 LAST_FILE="$HOME/.mcbot-last-enabled"
 STOP_FILE="$HOME/.mcbot-explicitly-stopped"
 KL_FILE="$HOME/.mcbot-offline-since"
@@ -31,12 +30,15 @@ GRACE=${MCBOT_KEEPALIVE_GRACE:-120}
 COOLDOWN=${MCBOT_KEEPALIVE_COOLDOWN:-900}
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 
-MC_PORT_MAP=$(fleet_json "f.accounts.map(a=>a.name+'='+a.port).join(' ')")
 port_of () {
-  for kv in $MC_PORT_MAP; do
-    [ "${kv%%=*}" = "$1" ] && { echo "${kv#*=}"; return 0; }
-  done
-  echo ""
+  case "$1" in
+    sd_dt)         echo 15101 ;;
+    ___Fr0g___)    echo 15102 ;;
+    ___donk666___) echo 15103 ;;
+    Nekoade_MAP)   echo 15104 ;;
+    Crumpledt_)    echo 15111 ;;
+    *)             echo "" ;;
+  esac
 }
 enabled_of ()  { awk '/^enabled:/{print $2; exit}' "$BOTS/$1.yaml" 2>/dev/null; }
 set_enabled () { sed -i "s/^enabled: .*/enabled: $2/" "$BOTS/$1.yaml"; }
@@ -163,6 +165,12 @@ do_ensure () {
 
   echo "$now" > "$cd_file"
   rm -f "$KL_FILE"
+  # _p167: 优先只热重启掉线的号——其它正在挂机的号连接不断开
+  if ctrl_alive; then
+    echo "未在线：$off（持续 $(( now - last ))s）-> 只重启这些号（其它挂机号不受影响）"
+    hot_apply "$off" "$off"
+    return $?
+  fi
   echo "未在线：$off（持续 $(( now - last ))s）-> 重启 yamb（掉线约 40 秒）"
   systemctl --user restart "$UNIT"
 }

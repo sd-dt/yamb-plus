@@ -1,16 +1,15 @@
 /* reply-capture.js —— 从 yamb.log 抓取「指令发出后的聊天栏回执」
  *
  * 原理：yamb 会把游戏里看到的每条聊天/系统消息写进日志，形如
- *   [Bot:bot1][MC:chat] 玩家甲: 这个指令不可用，尝试联系腐竹解决喵~
- *   [Bot:bot1][MC:system] [玩家甲] 这个指令不可用，尝试联系腐竹解决喵~
+ *   [Bot:sd_dt][MC:chat] TSL: 这个指令不可用，尝试联系腐竹解决喵~
+ *   [Bot:sd_dt][MC:system] [TSL] 这个指令不可用，尝试联系腐竹解决喵~
  * 所以只要记住「发送前的文件字节偏移」，发完之后盯新增内容即可。
  *
  * 不需要修改 yamb 源码。
  */
 const fs = require('fs')
 
-const { envAbs, repoPath } = require('../lib/env')
-const LOG = envAbs('YAMB_DIR', repoPath('yamb')) + '/yamb.log'
+const LOG = '/opt/qqbot/yamb/yamb.log'
 
 const CHAT_RE = /\[MC:chat\]\s*([^:]*):\s*(.*)$/
 const SYS_RE = /\[MC:system\]\s*(.*)$/
@@ -126,7 +125,7 @@ module.exports = { captureReply, logSizeNow }
 
 // ── 追加：从 yamb 的 outgoing.log 抓「机器人自己发出的消息」 ──
 // 这样 yamb 的回复可以保持私聊（公屏零输出），回执照样能拿给 QQ 看。
-const OUT = envAbs('YAMB_DIR', repoPath('yamb')) + '/outgoing.log'
+const OUT = '/opt/qqbot/yamb/outgoing.log'
 
 function outSizeNow () {
   try { return fs.statSync(OUT).size } catch (e) { return 0 }
